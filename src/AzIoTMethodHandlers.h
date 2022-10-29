@@ -6,7 +6,9 @@
 
 #define LED_GREEN 32
 
-bool toggleLed(int value);
+extern bool telemetryEnabled;
+
+bool enableTelemetry(int value);
 // bool setColor(char* ptr);
 // bool setMode(int value);
 // bool getStatus(char* ptr);

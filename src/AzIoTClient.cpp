@@ -109,8 +109,8 @@ esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event) {
       incoming_data[i] = '\0';
       Logger.Info("Data: " + String(incoming_data));
 
-      if(String(direct_method_name).equals("toggleLed")){
-        toggleLed(incoming_data[1]) ? status = 200 : status = 400;
+      if(String(direct_method_name).equals("enableTelemetry")){
+        enableTelemetry(incoming_data[1]) ? status = 200 : status = 400;
         sendResponse(az_span_create_from_str(ptr), status, NULL);
       }
       else if(String(direct_method_name).equals("func2")){
@@ -219,7 +219,9 @@ static void getTelemetryPayload(az_span payload, az_span* out_payload) {
 
   az_span original_payload = payload;
 
-  payload = az_span_copy(payload, AZ_SPAN_FROM_STR("{ \"msgCount\": "));
+  payload = az_span_copy(payload, AZ_SPAN_FROM_STR("{ \"deviceId\": \""));
+  payload = az_span_copy(payload, AZ_SPAN_FROM_STR(IOT_CONFIG_DEVICE_ID));
+  payload = az_span_copy(payload, AZ_SPAN_FROM_STR("\", \"msgCount\": "));
   (void)az_span_u32toa(payload, telemetry_send_count++, &payload);
   payload = az_span_copy(payload, AZ_SPAN_FROM_STR(" }"));
   payload = az_span_copy_u8(payload, '\0');
@@ -265,7 +267,7 @@ void azIoTClientLoop() {
     (void)esp_mqtt_client_destroy(mqtt_client);
     initializeMqttClient();
   } else if (millis() > next_telemetry_send_time_ms) {
-    sendTelemetry();
+    if (telemetryEnabled) sendTelemetry();
     next_telemetry_send_time_ms = millis() + TELEMETRY_FREQUENCY_MILLISECS;
   }
 }

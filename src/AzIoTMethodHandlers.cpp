@@ -1,14 +1,18 @@
 #include "AzIoTMethodHandlers.h"
 
-bool toggleLed(int value) {
+bool telemetryEnabled = false;
+
+bool enableTelemetry(int value) {
 
     value -= 48;
     
     if(value == 1) {
+        telemetryEnabled = true;
         digitalWrite(LED_GREEN, HIGH);
         return true;
     }
     if(value == 0) {
+        telemetryEnabled = false;
         digitalWrite(LED_GREEN, LOW);
         return true;
     }
