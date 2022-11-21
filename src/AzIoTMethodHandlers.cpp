@@ -4,19 +4,36 @@ bool telemetryEnabled = false;
 
 bool enableTelemetry(int value) {
 
-    value -= 48;
+  value -= 48;
     
-    if(value == 1) {
-        telemetryEnabled = true;
-        digitalWrite(LED_GREEN, HIGH);
-        return true;
-    }
-    if(value == 0) {
-        telemetryEnabled = false;
-        digitalWrite(LED_GREEN, LOW);
-        return true;
-    }
-    return false;
+  if(value == 1) {
+    telemetryEnabled = true;
+    digitalWrite(LED_GREEN, HIGH);
+    return true;
+  }
+  
+  if(value == 0) {
+    telemetryEnabled = false;
+    digitalWrite(LED_GREEN, LOW);
+    return true;
+  }
+  return false;
+}
+
+bool toggleRelay(int value) {
+
+  value -= 48;
+    
+  if(value == 1) {
+    closeRelay();
+    return true;
+  }
+
+  if(value == 0) {
+    openRelay();
+    return true;
+  }
+  return false;
 }
 
 // bool setColor(char* ptr) {
@@ -46,25 +63,6 @@ bool enableTelemetry(int value) {
 //         return true;
 //     }
 //     else return false;
-// }
-
-// bool setMode(int value) {
-
-//     value -= 48;
-    
-//     if(value == 1) {
-//         autoMode = true;
-//         digitalWrite(LED_GREEN, HIGH);
-//         return true;
-//     }
-//     if(value == 0) {
-//         autoMode = false;
-//         digitalWrite(LED_GREEN, LOW);
-//         isChanged = true;
-//         writeToLeds();
-//         return true;
-//     }
-//     return false;
 // }
 
 // bool getStatus(char* ptr) {

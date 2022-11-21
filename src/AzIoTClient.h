@@ -11,9 +11,9 @@
 #include "AzIoTMethodHandlers.h"
 #include "AzIoTSasToken.h"
 #include "SerialLogger.h"
+#include "PinManager.h"
 
 #define sizeofarray(a) (sizeof(a) / sizeof(a[0]))
-#define LED_YELLOW 33
 #define MQTT_QOS1 1
 #define DO_NOT_RETAIN_MSG 0
 #define SAS_TOKEN_DURATION_IN_MINUTES 60

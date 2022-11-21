@@ -113,8 +113,8 @@ esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event) {
         enableTelemetry(incoming_data[1]) ? status = 200 : status = 400;
         sendResponse(az_span_create_from_str(ptr), status, NULL);
       }
-      else if(String(direct_method_name).equals("func2")){
-        //func2(incoming_data) ? status = 200 : status = 400;
+      else if(String(direct_method_name).equals("toggleRelay")){
+        toggleRelay(incoming_data[1]) ? status = 200 : status = 400;
         sendResponse(az_span_create_from_str(ptr), status, NULL);
       }
       else if(String(direct_method_name).equals("func3")){
@@ -217,12 +217,19 @@ static uint32_t getEpochTimeInSecs() {
 
 static void getTelemetryPayload(az_span payload, az_span* out_payload) {
 
+  double voltage = static_cast <float> (rand()) / (static_cast <float> (RAND_MAX/250.0));
+  double current = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+
   az_span original_payload = payload;
 
   payload = az_span_copy(payload, AZ_SPAN_FROM_STR("{ \"deviceId\": \""));
-  payload = az_span_copy(payload, AZ_SPAN_FROM_STR(IOT_CONFIG_DEVICE_ID));
-  payload = az_span_copy(payload, AZ_SPAN_FROM_STR("\", \"msgCount\": "));
-  (void)az_span_u32toa(payload, telemetry_send_count++, &payload);
+  payload = az_span_copy(payload, AZ_SPAN_FROM_STR(DEVICE_ID));
+  payload = az_span_copy(payload, AZ_SPAN_FROM_STR("\", \"voltage\": "));
+  (void)az_span_dtoa(payload, voltage, 4, &payload);
+  payload = az_span_copy(payload, AZ_SPAN_FROM_STR(", \"current\": "));
+  (void)az_span_dtoa(payload, current, 4, &payload);
+  payload = az_span_copy(payload, AZ_SPAN_FROM_STR(", \"timestamp\": "));
+  (void)az_span_u32toa(payload, getEpochTimeInSecs(), &payload);
   payload = az_span_copy(payload, AZ_SPAN_FROM_STR(" }"));
   payload = az_span_copy_u8(payload, '\0');
 
