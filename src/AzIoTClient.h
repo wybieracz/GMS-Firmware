@@ -12,6 +12,7 @@
 #include "AzIoTSasToken.h"
 #include "SerialLogger.h"
 #include "PinManager.h"
+#include "LcdManager.h"
 
 #define sizeofarray(a) (sizeof(a) / sizeof(a[0]))
 #define MQTT_QOS1 1

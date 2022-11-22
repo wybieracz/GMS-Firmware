@@ -22,10 +22,11 @@ void setup() {
 }
 
 void loop() {
-
-  if (WiFi.status() != WL_CONNECTED) {
-    digitalWrite(LED_RED, LOW);
-    if(!initWiFi()) setAP();
-  }
-  else azIoTClientLoop();
+   if (!apActive) {
+    if (WiFi.status() != WL_CONNECTED) {
+     digitalWrite(LED_RED, LOW);
+     if(!initWiFi()) setAP();
+     }
+     else azIoTClientLoop();
+   } 
 }

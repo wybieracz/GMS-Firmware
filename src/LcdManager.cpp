@@ -12,7 +12,6 @@ void initLCD() {
 
   (void)setLcdBrightness(atoi(lcdState.c_str()));
   lcd.setCursor(0, 0);
-  lcd.print("GM System");
 }
 
 bool setLcdBrightness(int brightness) {
@@ -22,4 +21,13 @@ bool setLcdBrightness(int brightness) {
     ledcWrite(LED_CH, brightness);
     return true;
   } else return false;
+}
+
+void lcdPrint(char* text, int x, int y) {
+  lcd.setCursor(x, y);
+  lcd.print(text);
+}
+
+void lcdClear() {
+  lcd.clear();
 }

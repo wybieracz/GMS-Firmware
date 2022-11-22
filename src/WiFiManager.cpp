@@ -1,5 +1,7 @@
 #include "WiFiManager.h"
 
+bool apActive = false;
+
 void randomizePassword(char* password, int length) {
   for(int i = 0; i < length; i++) {
     password[i] = 33 + (esp_random() % 90);
@@ -20,20 +22,31 @@ bool initWiFi() {
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid.c_str(), pass.c_str());
   Logger.Info("Connecting to WiFi");
+  lcdClear();
+  lcdPrint("Connecting to", 0, 0);
+  lcdPrint("WiFi", 0, 1);
 
   unsigned long currentMillis = millis();
   previousMillis = currentMillis;
+  short int i = 5;
 
   while(WiFi.status() != WL_CONNECTED) {
-    delay(750);
+    delay(1000);
     Serial.print(".");
+    lcdPrint(".", i, 1);
     currentMillis = millis();
+    i++;
+    if(i > 15) i = 15;
     if (currentMillis - previousMillis >= interval) {
       Logger.Error("Failed to connect.");
+      lcdClear();
+      lcdPrint("WiFi failed!", 0, 0);
+      lcdPrint("Setting AP", 0, 1);
       return false;
     }
   }
 
+  apActive = false;
   Serial.println(WiFi.localIP());
   digitalWrite(LED_RED, HIGH);
   return true;
@@ -41,13 +54,19 @@ bool initWiFi() {
 
 void setAP() {
   // Connect to Wi-Fi network with SSID and password
+  apActive = true;
   digitalWrite(LED_BLUE, HIGH);
-  Logger.Info("Setting AP (Access Point)");
   randomizePassword(apPass, 10);
+  Logger.Info("Setting AP (Access Point)");
   Logger.Info("SSID: " + String(AP_SSID));
   Logger.Info("PASS: " + String(apPass));
+  lcdClear();
+  lcdPrint("SSID: ", 0, 0);
+  lcdPrint(AP_SSID, 6, 0);
+  lcdPrint("PASS: ", 0, 1);
+  lcdPrint(apPass, 6, 1);
   WiFi.softAP(AP_SSID, apPass);
-
+  delay(100);
   IPAddress IP = WiFi.softAPIP();
   Logger.Info("AP IP address: " + String(IP));
 
@@ -80,7 +99,14 @@ void setAP() {
       }
     }
     request->send(200, "text/plain", "Success! The device will restart and connect to your WiFi.");
-    delay(2000);
+    lcdClear();
+    lcdPrint("Rebooting", 0, 0);
+    
+    for(int i = 9; i < 12; i++) {
+      lcdPrint(".", i, 0);
+      delay(500);
+    }
+    delay(500);
     digitalWrite(LED_BLUE, LOW);
     ESP.restart();
   });

@@ -5,6 +5,7 @@
 #include <AsyncTCP.h>
 #include "SerialLogger.h"
 #include "FlashManager.h"
+#include "LcdManager.h"
 
 #define AP_SSID "x8YcF6"
 
@@ -18,6 +19,8 @@ static char apPass[] = "0123456789";
 
 static unsigned long previousMillis = 0;
 static const long interval = 10000;
+
+extern bool apActive;
 
 void randomizePassword(char* password, int length);
 
