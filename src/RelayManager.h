@@ -5,12 +5,16 @@
 #include "PinManager.h"
 #include "FlashManager.h"
 
-extern bool relayState;
+class RelayManager {
+  private:
+    bool relayState;
+    String relayStateMem;
+  public:
+    void init();
+    void open();
+    void close();
+};
 
-void initRelay();
-
-void openRelay();
-
-void closeRelay();
+extern RelayManager relayManager;
 
 #endif //RELAYMANAGER_H

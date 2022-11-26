@@ -2,8 +2,8 @@
 
 bool relayState = false;
 
-void initRelay() {
-  relayStateMem = readFile(SPIFFS, relayStatePath);
+void RelayManager::init() {
+  relayStateMem = flashManager.read(RELAY_PATH);
   if(relayStateMem == "1") {
     relayState = true;
     digitalWrite(RELAY, HIGH);
@@ -13,14 +13,16 @@ void initRelay() {
   }
 }
 
-void openRelay() {
+void RelayManager::open() {
   relayState = false;
   digitalWrite(RELAY, LOW);
-  writeFile(SPIFFS, relayStatePath, "0");
+  flashManager.write(RELAY_PATH, "0");
 }
 
-void closeRelay() {
+void RelayManager::close() {
   relayState = true;
   digitalWrite(RELAY, HIGH);
-  writeFile(SPIFFS, relayStatePath, "1");
+  flashManager.write(RELAY_PATH, "1");
 }
+
+RelayManager relayManager;

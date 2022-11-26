@@ -15,7 +15,7 @@ static void sendResponse(az_span rid, uint16_t status, char * payload) {
 
   if (az_result_failed(az_iot_hub_client_methods_response_get_publish_topic(
     &client, rid, status, response_topic, sizeof(response_topic), NULL))) {
-    Logger.Error("Failed to get response topic!");
+    logger.error("Failed to get response topic!");
     return;
   }
 
@@ -27,10 +27,10 @@ static void sendResponse(az_span rid, uint16_t status, char * payload) {
       MQTT_QOS1,
       DO_NOT_RETAIN_MSG) == -1
   ) {
-    Logger.Error("Failed to response direct method!");
+    logger.error("Failed to response direct method!");
   }
   else {
-    Logger.Info("Responsed to direct method.");
+    logger.info("Responsed to direct method.");
   }
 }
 
@@ -42,45 +42,45 @@ esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event) {
     uint16_t status;
 
     case MQTT_EVENT_ERROR:
-      Logger.Info("MQTT event MQTT_EVENT_ERROR");
+      logger.info("MQTT event MQTT_EVENT_ERROR");
       break;
       
     case MQTT_EVENT_CONNECTED:
-      Logger.Info("MQTT event MQTT_EVENT_CONNECTED");
+      logger.info("MQTT event MQTT_EVENT_CONNECTED");
       r = esp_mqtt_client_subscribe(mqtt_client, AZ_IOT_HUB_CLIENT_METHODS_SUBSCRIBE_TOPIC, 1);
 
-      if (r == -1) Logger.Error("Could not subscribe for direct methods messages.");
-      else Logger.Info("Subscribed for direct methods messages; message id:"  + String(r));
+      if (r == -1) logger.error("Could not subscribe for direct methods messages.");
+      else logger.info("Subscribed for direct methods messages; message id:"  + String(r));
       break;
 
     case MQTT_EVENT_DISCONNECTED:
       digitalWrite(LED_YELLOW, LOW);
-      Logger.Info("MQTT event MQTT_EVENT_DISCONNECTED");
+      logger.info("MQTT event MQTT_EVENT_DISCONNECTED");
       break;
 
     case MQTT_EVENT_SUBSCRIBED:
-      Logger.Info("MQTT event MQTT_EVENT_SUBSCRIBED");
-      Logger.Info("Message ID:" + (String)event->msg_id);
+      logger.info("MQTT event MQTT_EVENT_SUBSCRIBED");
+      logger.info("Message ID:" + (String)event->msg_id);
       break;
 
     case MQTT_EVENT_UNSUBSCRIBED:
-      Logger.Info("MQTT event MQTT_EVENT_UNSUBSCRIBED");
+      logger.info("MQTT event MQTT_EVENT_UNSUBSCRIBED");
       break;
 
     case MQTT_EVENT_PUBLISHED:
-      Logger.Info("MQTT event MQTT_EVENT_PUBLISHED");
+      logger.info("MQTT event MQTT_EVENT_PUBLISHED");
       break;
 
     case MQTT_EVENT_DATA:
-      Logger.Info("MQTT event MQTT_EVENT_DATA");
-      Logger.Info("Message ID:" + (String)event->msg_id);
+      logger.info("MQTT event MQTT_EVENT_DATA");
+      logger.info("Message ID:" + (String)event->msg_id);
 
       for (i = 0; i < (INCOMING_DATA_BUFFER_SIZE - 1) && i < event->topic_len; i++) {
         incoming_data[i] = event->topic[i]; 
       }
 
       incoming_data[i] = '\0';
-      Logger.Info("Topic: " + String(incoming_data));
+      logger.info("Topic: " + String(incoming_data));
 
       //Get method name from topic. Works only when subscribed "$iothub/methods/POST/#"
       i = 0;
@@ -93,21 +93,21 @@ esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event) {
       }
 
       direct_method_name[i] = '\0';
-      Logger.Info("Method: " + String(direct_method_name));
+      logger.info("Method: " + String(direct_method_name));
 
       while (*ptr && *ptr != '=') {
         ptr++;
       }
       ptr++;
 
-      Logger.Info("rid: " + String(ptr));
+      logger.info("rid: " + String(ptr));
       
       for (i = 0; i < (INCOMING_DATA_BUFFER_SIZE - 1) && i < event->data_len; i++) {
         incoming_data[i] = event->data[i]; 
       }
 
       incoming_data[i] = '\0';
-      Logger.Info("Data: " + String(incoming_data));
+      logger.info("Data: " + String(incoming_data));
 
       if(String(direct_method_name).equals("enableTelemetry")){
         enableTelemetry(incoming_data[1]) ? status = 200 : status = 400;
@@ -128,15 +128,15 @@ esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event) {
       else {
         status = 404;
       }
-      Logger.Info("Code: " + String(status));
+      logger.info("Code: " + String(status));
       break;
 
     case MQTT_EVENT_BEFORE_CONNECT:
-      Logger.Info("MQTT event MQTT_EVENT_BEFORE_CONNECT");
+      logger.info("MQTT event MQTT_EVENT_BEFORE_CONNECT");
       break;
 
     default:
-      Logger.Error("MQTT event UNKNOWN");
+      logger.error("MQTT event UNKNOWN");
       break;
   }
   return ESP_OK;
@@ -150,30 +150,30 @@ void initializeIoTHubClient() {
       az_span_create((uint8_t*)device_id, strlen(device_id)),
       NULL)
   )) {
-    Logger.Error("Failed initializing Azure IoT Hub client");
+    logger.error("Failed initializing Azure IoT Hub client");
     return;
   }
 
   size_t client_id_length;
   
   if (az_result_failed(az_iot_hub_client_get_client_id(&client, mqtt_client_id, sizeof(mqtt_client_id) - 1, &client_id_length))) {
-    Logger.Error("Failed getting client id");
+    logger.error("Failed getting client id");
     return;
   }
 
   if (az_result_failed(az_iot_hub_client_get_user_name(&client, mqtt_username, sizeofarray(mqtt_username), NULL))) {
-    Logger.Error("Failed to get MQTT clientId, return code");
+    logger.error("Failed to get MQTT clientId, return code");
     return;
   }
 
-  Logger.Info("Client ID: " + String(mqtt_client_id));
-  Logger.Info("Username: " + String(mqtt_username));
+  logger.info("Client ID: " + String(mqtt_client_id));
+  logger.info("Username: " + String(mqtt_username));
 }
 
 int initializeMqttClient() {
 
   if (sasToken.Generate(SAS_TOKEN_DURATION_IN_MINUTES) != 0) {
-    Logger.Error("Failed generating SAS token");
+    logger.error("Failed generating SAS token");
     return 1;
   }
 
@@ -194,18 +194,18 @@ int initializeMqttClient() {
   mqtt_client = esp_mqtt_client_init(&mqtt_config);
 
   if (mqtt_client == NULL) {
-    Logger.Error("Failed creating mqtt client");
+    logger.error("Failed creating mqtt client");
     return 1;
   }
 
   esp_err_t start_result = esp_mqtt_client_start(mqtt_client);
 
   if (start_result != ESP_OK) {
-    Logger.Error("Could not start mqtt client; error code:" + start_result);
+    logger.error("Could not start mqtt client; error code:" + start_result);
     return 1;
   }
   else {
-    Logger.Info("MQTT client started; output code:" + (int)start_result);
+    logger.info("MQTT client started; output code:" + (int)start_result);
     digitalWrite(LED_YELLOW, HIGH);
     return 0;
   }
@@ -240,13 +240,13 @@ static void sendTelemetry() {
 
   az_span telemetry = AZ_SPAN_FROM_BUFFER(telemetry_payload);
 
-  Logger.Info("Sending telemetry ...");
+  logger.info("Sending telemetry ...");
 
   // The topic could be obtained just once during setup,
   // however if properties are used the topic need to be generated again to reflect the
   // current values of the properties.
   if (az_result_failed(az_iot_hub_client_telemetry_get_publish_topic(&client, NULL, telemetry_topic, sizeof(telemetry_topic), NULL))) {
-    Logger.Error("Failed az_iot_hub_client_telemetry_get_publish_topic");
+    logger.error("Failed az_iot_hub_client_telemetry_get_publish_topic");
     return;
   }
 
@@ -260,9 +260,9 @@ static void sendTelemetry() {
           MQTT_QOS1,
           DO_NOT_RETAIN_MSG)
       == 0) {
-    Logger.Error("Failed publishing");
+    logger.error("Failed publishing");
   } else {
-    Logger.Info("Message published successfully");
+    logger.info("Message published successfully");
   }
 }
 
@@ -270,7 +270,7 @@ void azIoTClientLoop() {
 
   if (sasToken.IsExpired()) {
     digitalWrite(LED_YELLOW, LOW);
-    Logger.Info("SAS token expired! Reconnecting with a new one.");
+    logger.info("SAS token expired! Reconnecting with a new one.");
     (void)esp_mqtt_client_destroy(mqtt_client);
     initializeMqttClient();
   } else if (millis() > next_telemetry_send_time_ms) {

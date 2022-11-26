@@ -1,32 +1,35 @@
 #include <Arduino.h>
-#include "Time.h"
+#include "TimeManager.h"
 #include "WiFiManager.h"
 #include "AzIoTClient.h"
-#include "LcdManager.h"
+#include "EnergyManager.h"
 
 void setup() {
 
   initPinout();
-  initSPIFFS();
-  initLCD();
-  initRelay();
+  flashManager.init();
+  lcdManager.init();
+  relayManager.init();
 
-  if(initWiFi()) {
-    initializeTime();
+  if(wifiManager.init()) {
+    timeManager.init();
     initializeIoTHubClient();
     (void)initializeMqttClient();
   } else {
-    setAP();
+    wifiManager.setAP();
   }
-  
 }
 
 void loop() {
-   if (!apActive) {
-    if (WiFi.status() != WL_CONNECTED) {
-     digitalWrite(LED_RED, LOW);
-     if(!initWiFi()) setAP();
-     }
-     else azIoTClientLoop();
-   } 
+  if (!wifiManager.isAPActive()) {
+  if (WiFi.status() != WL_CONNECTED) {
+      digitalWrite(LED_RED, LOW);
+      if(!wifiManager.init()) wifiManager.setAP();
+    }
+    else {
+      azIoTClientLoop();
+      energyManager.calc(20, 1000);
+      energyManager.print();
+    }
+  } 
 }

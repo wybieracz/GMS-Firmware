@@ -11,12 +11,14 @@
 #endif
 
 class SerialLogger {
-public:
-  SerialLogger();
-  void Info(String message);
-  void Error(String message);
+  private:
+    void writeTime();
+  public:
+    SerialLogger();
+    void info(String message);
+    void error(String message);
 };
 
-extern SerialLogger Logger;
+extern SerialLogger logger;
 
 #endif // SERIALLOGGER_H

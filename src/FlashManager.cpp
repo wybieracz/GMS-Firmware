@@ -1,29 +1,29 @@
 #include "FlashManager.h"
 
-String ssid;
-String pass;
-String relayStateMem;
-String lcdState;
-const char* ssidPath = "/ssid.txt";
-const char* passPath = "/pass.txt";
-const char* relayStatePath = "/relayState.txt";
-const char* lcdStatePath = "/lcdState.txt";
+// String ssid;
+// String pass;
+// String relayStateMem;
+// String lcdState;
+// const char* ssidPath = "/ssid.txt";
+// const char* passPath = "/pass.txt";
+//const char* relayStatePath = "/relay.txt";
+//const char* lcdStatePath = "/lcd.txt";
 
 // Initialize SPIFFS
-void initSPIFFS() {
+void FlashManager::init() {
   if (!SPIFFS.begin(true)) {
-    Logger.Error("An error has occurred while mounting SPIFFS.");
+    logger.error("An error has occurred while mounting SPIFFS.");
   }
-  Logger.Info("SPIFFS mounted successfully.");
+  logger.info("SPIFFS mounted successfully.");
 }
 
 // Read File from SPIFFS
-String readFile(fs::FS &fs, const char * path) {
-  Logger.Info("Reading file: " + String(path));
+String FlashManager::read(const char * path) {
+  logger.info("Reading file: " + String(path));
 
-  File file = fs.open(path);
+  File file = SPIFFS.open(path);
   if(!file || file.isDirectory()){
-    Logger.Error("Failed to open file for reading.");
+    logger.error("Failed to open file for reading.");
     return String();
   }
   
@@ -36,17 +36,19 @@ String readFile(fs::FS &fs, const char * path) {
 }
 
 // Write file to SPIFFS
-void writeFile(fs::FS &fs, const char * path, const char * message) {
-  Logger.Info("Writing file: " + String(path));
+void FlashManager::write(const char * path, const char * message) {
+  logger.info("Writing file: " + String(path));
 
-  File file = fs.open(path, FILE_WRITE);
+  File file = SPIFFS.open(path, FILE_WRITE);
   if(!file) {
-    Logger.Error("Failed to open file for writing.");
+    logger.error("Failed to open file for writing.");
     return;
   }
   if(file.print(message)) {
-    Logger.Info("File written.");
+    logger.info("File written.");
   } else {
-    Logger.Error("Write failed.");
+    logger.error("Write failed.");
   }
 }
+
+FlashManager flashManager;

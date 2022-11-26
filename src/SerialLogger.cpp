@@ -6,7 +6,11 @@
 
 #define UNIX_EPOCH_START_YEAR 1900
 
-static void writeTime() {
+SerialLogger::SerialLogger() { 
+  Serial.begin(SERIAL_LOGGER_BAUD_RATE);
+}
+
+void SerialLogger::writeTime() {
 
   struct tm* ptm;
   time_t now = time(NULL);
@@ -35,20 +39,20 @@ static void writeTime() {
   Serial.print(ptm->tm_sec);
 }
 
-SerialLogger::SerialLogger() { Serial.begin(SERIAL_LOGGER_BAUD_RATE); }
 
-void SerialLogger::Info(String message) {
+
+void SerialLogger::info(String message) {
 
   writeTime();
   Serial.print(" [INFO] ");
   Serial.println(message);
 }
 
-void SerialLogger::Error(String message) {
+void SerialLogger::error(String message) {
 
   writeTime();
   Serial.print(" [ERROR] ");
   Serial.println(message);
 }
 
-SerialLogger Logger;
+SerialLogger logger;

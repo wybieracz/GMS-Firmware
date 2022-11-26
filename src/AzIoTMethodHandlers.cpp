@@ -25,12 +25,12 @@ bool toggleRelay(int value) {
   value -= 48;
     
   if(value == 1) {
-    closeRelay();
+    relayManager.close();
     return true;
   }
 
   if(value == 0) {
-    openRelay();
+    relayManager.open();
     return true;
   }
   return false;

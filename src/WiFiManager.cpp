@@ -1,30 +1,41 @@
 #include "WiFiManager.h"
 
-bool apActive = false;
+AsyncWebServer server(80);
+String ssid;
+String pass;
 
-void randomizePassword(char* password, int length) {
+WiFiManager::WiFiManager() {
+  previousMillis = 0;
+  apActive = false;
+}
+
+void WiFiManager::randomizePassword(char* password, int length) {
+  int temp = 48;
   for(int i = 0; i < length; i++) {
-    password[i] = 33 + (esp_random() % 90);
+    temp = 33 + (esp_random() % 90);
+    if(temp == 39 || temp == 96) temp++;
+    password[i] = temp;
   }
 }
 
-bool initWiFi() {
-
-  // Load values saved in SPIFFS
-  ssid = readFile(SPIFFS, ssidPath);
-  pass = readFile(SPIFFS, passPath);
+bool WiFiManager::init() {
+  // Load values saved in flash
+  ssid = flashManager.read(SSID_PATH);
+  pass = flashManager.read(PASS_PATH);
 
   if(ssid=="") {
-    Logger.Error("Undefined SSID or IP address.");
+    logger.error("Undefined SSID or IP address.");
     return false;
   }
 
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid.c_str(), pass.c_str());
-  Logger.Info("Connecting to WiFi");
-  lcdClear();
-  lcdPrint("Connecting to", 0, 0);
-  lcdPrint("WiFi", 0, 1);
+  logger.info("Connecting to WiFi");
+  lcdManager.clear();
+  
+  lcdManager.print("Connecting to", 0, 0);
+  
+  lcdManager.print("WiFi", 0, 1);
 
   unsigned long currentMillis = millis();
   previousMillis = currentMillis;
@@ -33,15 +44,18 @@ bool initWiFi() {
   while(WiFi.status() != WL_CONNECTED) {
     delay(1000);
     Serial.print(".");
-    lcdPrint(".", i, 1);
+    
+    lcdManager.print(".", i, 1);
     currentMillis = millis();
     i++;
     if(i > 15) i = 15;
     if (currentMillis - previousMillis >= interval) {
-      Logger.Error("Failed to connect.");
-      lcdClear();
-      lcdPrint("WiFi failed!", 0, 0);
-      lcdPrint("Setting AP", 0, 1);
+      logger.error("Failed to connect.");
+      lcdManager.clear();
+      
+      lcdManager.print("WiFi failed!", 0, 0);
+      
+      lcdManager.print("Setting AP", 0, 1);
       return false;
     }
   }
@@ -52,23 +66,27 @@ bool initWiFi() {
   return true;
 }
 
-void setAP() {
+void WiFiManager::setAP() {
   // Connect to Wi-Fi network with SSID and password
   apActive = true;
   digitalWrite(LED_BLUE, HIGH);
   randomizePassword(apPass, 10);
-  Logger.Info("Setting AP (Access Point)");
-  Logger.Info("SSID: " + String(AP_SSID));
-  Logger.Info("PASS: " + String(apPass));
-  lcdClear();
-  lcdPrint("SSID: ", 0, 0);
-  lcdPrint(AP_SSID, 6, 0);
-  lcdPrint("PASS: ", 0, 1);
-  lcdPrint(apPass, 6, 1);
+  logger.info("Setting AP (Access Point)");
+  logger.info("SSID: " + String(AP_SSID));
+  logger.info("PASS: " + String(apPass));
+  lcdManager.clear();
+  
+  lcdManager.print("SSID: ", 0, 0);
+  
+  lcdManager.print(AP_SSID, 6, 0);
+  
+  lcdManager.print("PASS: ", 0, 1);
+  
+  lcdManager.print(apPass, 6, 1);
   WiFi.softAP(AP_SSID, apPass);
   delay(100);
   IPAddress IP = WiFi.softAPIP();
-  Logger.Info("AP IP address: " + String(IP));
+  logger.info("AP IP address: " + String(IP));
 
   // Web Server Root URL
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
@@ -83,27 +101,28 @@ void setAP() {
       AsyncWebParameter* p = request->getParam(i);
       if(p->isPost()){
         // HTTP POST ssid value
-        if (p->name() == PARAM_INPUT_1) {
+        if (p->name() == PARAM_SSID) {
           ssid = p->value().c_str();
-          Logger.Info("SSID set to: " + String(ssid));
+          logger.info("SSID set to: " + String(ssid));
           // Write file to save value
-          writeFile(SPIFFS, ssidPath, ssid.c_str());
+          flashManager.write(SSID_PATH, ssid.c_str());
         }
         // HTTP POST pass value
-        if (p->name() == PARAM_INPUT_2) {
+        if (p->name() == PARAM_PASS) {
           pass = p->value().c_str();
-          Logger.Info("Password set to: " + String(pass));
+          logger.info("Password set to: " + String(pass));
           // Write file to save value
-          writeFile(SPIFFS, passPath, pass.c_str());
+          flashManager.write(PASS_PATH, pass.c_str());
         }
       }
     }
     request->send(200, "text/plain", "Success! The device will restart and connect to your WiFi.");
-    lcdClear();
-    lcdPrint("Rebooting", 0, 0);
+
+    lcdManager.clear();
+    lcdManager.print("Rebooting", 0, 0);
     
     for(int i = 9; i < 12; i++) {
-      lcdPrint(".", i, 0);
+      lcdManager.print(".", i, 0);
       delay(500);
     }
     delay(500);
@@ -112,3 +131,9 @@ void setAP() {
   });
   server.begin();
 }
+
+bool WiFiManager::isAPActive() {
+  return apActive;
+}
+
+WiFiManager wifiManager;

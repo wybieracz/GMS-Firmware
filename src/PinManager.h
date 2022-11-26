@@ -15,6 +15,8 @@
 #define E 23
 #define RS 22
 #define LED_LCD 21
+#define V_IN 35
+#define I_IN 34
 
 void initPinout();
 

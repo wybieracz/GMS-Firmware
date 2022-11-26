@@ -9,14 +9,30 @@
 #define LED_CH 0
 #define LED_RES 8
 
-static int lcdBrightness = 255;
+class LcdManager {
+  private:
+    String lcdState;
+    int lcdBrightness;
+  public:
+  void init();
+  bool setBrightness(int brightness);
+  void print(char* text, int x, int y);
+  void printFloat(float value, int precision, int x, int y);
+  void clear();
+};
 
-void initLCD();
+extern LcdManager lcdManager;
 
-bool setLcdBrightness(int brightness);
+// static int lcdBrightness = 255;
 
-void lcdPrint(char* text, int x, int y);
+// void initLCD();
 
-void lcdClear();
+// bool setLcdBrightness(int brightness);
+
+// void lcdPrint(char* text, int x, int y);
+
+// void lcdPrintFloat(float value, int precision, int x, int y);
+
+// void lcdClear();
 
 #endif //LCDMANAGER_H
