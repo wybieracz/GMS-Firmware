@@ -13,8 +13,9 @@ void setup() {
 
   if(wifiManager.init()) {
     timeManager.init();
-    initializeIoTHubClient();
-    (void)initializeMqttClient();
+    // initIoTHubClient();
+    // (void)initMqttClient();
+    iotClient.init();
   } else {
     wifiManager.setAP();
   }
@@ -27,7 +28,8 @@ void loop() {
       if(!wifiManager.init()) wifiManager.setAP();
     }
     else {
-      azIoTClientLoop();
+      iotClient.check();
+      // azIoTClientLoop();
       energyManager.calc(20, 1000);
       energyManager.print();
     }

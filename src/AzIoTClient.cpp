@@ -3,38 +3,14 @@
 
 static az_iot_hub_client client;
 static esp_mqtt_client_handle_t mqtt_client;
-
 static AzIoTSasToken sasToken(
   &client,
   AZ_SPAN_FROM_STR(IOT_CONFIG_DEVICE_KEY),
-  AZ_SPAN_FROM_BUFFER(sas_signature_buffer),
-  AZ_SPAN_FROM_BUFFER(mqtt_password)
+  AZ_SPAN_FROM_BUFFER(mqttPassword),
+  AZ_SPAN_FROM_BUFFER(sasSignatureBuffer)
 );
 
-static void sendResponse(az_span rid, uint16_t status, char * payload) {
-
-  if (az_result_failed(az_iot_hub_client_methods_response_get_publish_topic(
-    &client, rid, status, response_topic, sizeof(response_topic), NULL))) {
-    logger.error("Failed to get response topic!");
-    return;
-  }
-
-  if (esp_mqtt_client_publish(
-      mqtt_client,
-      response_topic,
-      payload,
-      0,
-      MQTT_QOS1,
-      DO_NOT_RETAIN_MSG) == -1
-  ) {
-    logger.error("Failed to response direct method!");
-  }
-  else {
-    logger.info("Responsed to direct method.");
-  }
-}
-
-esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event) {
+static esp_err_t mqttEventHandler(esp_mqtt_event_handle_t event) {
 
   switch (event->event_id) {
     int i, r, rid;
@@ -76,24 +52,23 @@ esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event) {
       logger.info("Message ID:" + (String)event->msg_id);
 
       for (i = 0; i < (INCOMING_DATA_BUFFER_SIZE - 1) && i < event->topic_len; i++) {
-        incoming_data[i] = event->topic[i]; 
+        incomingData[i] = event->topic[i]; 
       }
-
-      incoming_data[i] = '\0';
-      logger.info("Topic: " + String(incoming_data));
+      incomingData[i] = '\0';
+      logger.info("Topic: " + String(incomingData));
 
       //Get method name from topic. Works only when subscribed "$iothub/methods/POST/#"
       i = 0;
-      ptr = incoming_data + 21;
+      ptr = incomingData + 21;
 
       while (*ptr && *ptr != '/') {
-        direct_method_name[i] = *ptr;
+        methodName[i] = *ptr;
         i++;
         ptr++;
       }
 
-      direct_method_name[i] = '\0';
-      logger.info("Method: " + String(direct_method_name));
+      methodName[i] = '\0';
+      logger.info("Method: " + String(methodName));
 
       while (*ptr && *ptr != '=') {
         ptr++;
@@ -103,27 +78,27 @@ esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event) {
       logger.info("rid: " + String(ptr));
       
       for (i = 0; i < (INCOMING_DATA_BUFFER_SIZE - 1) && i < event->data_len; i++) {
-        incoming_data[i] = event->data[i]; 
+        incomingData[i] = event->data[i]; 
       }
 
-      incoming_data[i] = '\0';
-      logger.info("Data: " + String(incoming_data));
+      incomingData[i] = '\0';
+      logger.info("Data: " + String(incomingData));
 
-      if(String(direct_method_name).equals("enableTelemetry")){
-        enableTelemetry(incoming_data[1]) ? status = 200 : status = 400;
-        sendResponse(az_span_create_from_str(ptr), status, NULL);
+      if(String(methodName).equals("enableTelemetry")){
+        enableTelemetry(incomingData[1]) ? status = 200 : status = 400;
+        iotClient.sendResponse(az_span_create_from_str(ptr), status, NULL);
       }
-      else if(String(direct_method_name).equals("toggleRelay")){
-        toggleRelay(incoming_data[1]) ? status = 200 : status = 400;
-        sendResponse(az_span_create_from_str(ptr), status, NULL);
+      else if(String(methodName).equals("toggleRelay")){
+        toggleRelay(incomingData[1]) ? status = 200 : status = 400;
+        iotClient.sendResponse(az_span_create_from_str(ptr), status, NULL);
       }
-      else if(String(direct_method_name).equals("func3")){
-        //func3(incoming_data[1]) ? status = 200 : status = 400;
-        sendResponse(az_span_create_from_str(ptr), status, NULL);
+      else if(String(methodName).equals("func3")){
+        //func3(incomingData[1]) ? status = 200 : status = 400;
+        //sendResponse(az_span_create_from_str(ptr), status, NULL);
       }
-      else if(String(direct_method_name).equals("func4")){
-        //func4(response_data) ? status = 200 : status = 400;
-        sendResponse(az_span_create_from_str(ptr), status, response_data);
+      else if(String(methodName).equals("func4")){
+        //func4(responseData) ? status = 200 : status = 400;
+        //sendResponse(az_span_create_from_str(ptr), status, responseData);
       }
       else {
         status = 404;
@@ -142,12 +117,35 @@ esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event) {
   return ESP_OK;
 }
 
-void initializeIoTHubClient() {
+void AzIoTClient::sendResponse(az_span rid, uint16_t status, char * payload) {
+
+  if (az_result_failed(az_iot_hub_client_methods_response_get_publish_topic(
+    &client, rid, status, responseTopic, sizeof(responseTopic), NULL))) {
+    logger.error("Failed to get response topic!");
+    return;
+  }
+
+  if (esp_mqtt_client_publish(
+      mqtt_client,
+      responseTopic,
+      payload,
+      0,
+      MQTT_QOS1,
+      DO_NOT_RETAIN_MSG) == -1
+  ) {
+    logger.error("Failed to response direct method!");
+  }
+  else {
+    logger.info("Responsed to direct method.");
+  }
+}
+
+void AzIoTClient::initIoTHubClient() {
 
   if (az_result_failed(az_iot_hub_client_init(
       &client,
       az_span_create((uint8_t*)host, strlen(host)),
-      az_span_create((uint8_t*)device_id, strlen(device_id)),
+      az_span_create((uint8_t*)deviceId, strlen(deviceId)),
       NULL)
   )) {
     logger.error("Failed initializing Azure IoT Hub client");
@@ -156,21 +154,21 @@ void initializeIoTHubClient() {
 
   size_t client_id_length;
   
-  if (az_result_failed(az_iot_hub_client_get_client_id(&client, mqtt_client_id, sizeof(mqtt_client_id) - 1, &client_id_length))) {
+  if (az_result_failed(az_iot_hub_client_get_client_id(&client, mqttClientId, sizeof(mqttClientId) - 1, &client_id_length))) {
     logger.error("Failed getting client id");
     return;
   }
 
-  if (az_result_failed(az_iot_hub_client_get_user_name(&client, mqtt_username, sizeofarray(mqtt_username), NULL))) {
+  if (az_result_failed(az_iot_hub_client_get_user_name(&client, mqttUsername, sizeofarray(mqttUsername), NULL))) {
     logger.error("Failed to get MQTT clientId, return code");
     return;
   }
 
-  logger.info("Client ID: " + String(mqtt_client_id));
-  logger.info("Username: " + String(mqtt_username));
+  logger.info("Client ID: " + String(mqttClientId));
+  logger.info("Username: " + String(mqttUsername));
 }
 
-int initializeMqttClient() {
+int AzIoTClient::initMqttClient() {
 
   if (sasToken.Generate(SAS_TOKEN_DURATION_IN_MINUTES) != 0) {
     logger.error("Failed generating SAS token");
@@ -179,15 +177,15 @@ int initializeMqttClient() {
 
   esp_mqtt_client_config_t mqtt_config;
   memset(&mqtt_config, 0, sizeof(mqtt_config));
-  mqtt_config.uri = mqtt_broker_uri;
-  mqtt_config.port = mqtt_port;
-  mqtt_config.client_id = mqtt_client_id;
-  mqtt_config.username = mqtt_username;
+  mqtt_config.uri = mqttBrokerUri;
+  mqtt_config.port = mqttPort;
+  mqtt_config.client_id = mqttClientId;
+  mqtt_config.username = mqttUsername;
   mqtt_config.password = (const char*)az_span_ptr(sasToken.Get());
   mqtt_config.keepalive = 30;
   mqtt_config.disable_clean_session = 0;
   mqtt_config.disable_auto_reconnect = false;
-  mqtt_config.event_handle = mqtt_event_handler;
+  mqtt_config.event_handle = mqttEventHandler;
   mqtt_config.user_context = NULL;
   mqtt_config.cert_pem = (const char*)ca_pem;
 
@@ -211,11 +209,7 @@ int initializeMqttClient() {
   }
 }
 
-static uint32_t getEpochTimeInSecs() { 
-  return (uint32_t)time(NULL);
-}
-
-static void getTelemetryPayload(az_span payload, az_span* out_payload) {
+void AzIoTClient::getTelemetryPayload(az_span payload, az_span* out_payload) {
 
   double voltage = static_cast <float> (rand()) / (static_cast <float> (RAND_MAX/250.0));
   double current = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
@@ -229,23 +223,23 @@ static void getTelemetryPayload(az_span payload, az_span* out_payload) {
   payload = az_span_copy(payload, AZ_SPAN_FROM_STR(", \"current\": "));
   (void)az_span_dtoa(payload, current, 4, &payload);
   payload = az_span_copy(payload, AZ_SPAN_FROM_STR(", \"timestamp\": "));
-  (void)az_span_u32toa(payload, getEpochTimeInSecs(), &payload);
+  (void)az_span_u32toa(payload, (uint32_t)time(NULL), &payload);
   payload = az_span_copy(payload, AZ_SPAN_FROM_STR(" }"));
   payload = az_span_copy_u8(payload, '\0');
 
   *out_payload = az_span_slice(original_payload, 0, az_span_size(original_payload) - az_span_size(payload) - 1);
 }
 
-static void sendTelemetry() {
+void AzIoTClient::sendTelemetry() {
 
-  az_span telemetry = AZ_SPAN_FROM_BUFFER(telemetry_payload);
+  az_span telemetry = AZ_SPAN_FROM_BUFFER(telemetryPayload);
 
   logger.info("Sending telemetry ...");
 
   // The topic could be obtained just once during setup,
   // however if properties are used the topic need to be generated again to reflect the
   // current values of the properties.
-  if (az_result_failed(az_iot_hub_client_telemetry_get_publish_topic(&client, NULL, telemetry_topic, sizeof(telemetry_topic), NULL))) {
+  if (az_result_failed(az_iot_hub_client_telemetry_get_publish_topic(&client, NULL, telemetryTopic, sizeof(telemetryTopic), NULL))) {
     logger.error("Failed az_iot_hub_client_telemetry_get_publish_topic");
     return;
   }
@@ -254,7 +248,7 @@ static void sendTelemetry() {
 
   if (esp_mqtt_client_publish(
           mqtt_client,
-          telemetry_topic,
+          telemetryTopic,
           (const char*)az_span_ptr(telemetry),
           az_span_size(telemetry),
           MQTT_QOS1,
@@ -266,15 +260,23 @@ static void sendTelemetry() {
   }
 }
 
-void azIoTClientLoop() {
+void AzIoTClient::init() {
+
+  initIoTHubClient();
+  (void)initMqttClient();
+}
+
+void AzIoTClient::check() {
 
   if (sasToken.IsExpired()) {
     digitalWrite(LED_YELLOW, LOW);
     logger.info("SAS token expired! Reconnecting with a new one.");
     (void)esp_mqtt_client_destroy(mqtt_client);
-    initializeMqttClient();
-  } else if (millis() > next_telemetry_send_time_ms) {
+    initMqttClient();
+  } else if (millis() > nextTelemetryTime) {
     if (telemetryEnabled) sendTelemetry();
-    next_telemetry_send_time_ms = millis() + TELEMETRY_FREQUENCY_MILLISECS;
+    nextTelemetryTime = millis() + TELEMETRY_FREQUENCY_MILLISECS;
   }
 }
+
+AzIoTClient iotClient;

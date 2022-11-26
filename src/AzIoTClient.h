@@ -21,31 +21,66 @@
 #define INCOMING_DATA_BUFFER_SIZE 128
 #define DIRECT_METHOD_NAME_SIZE 64
 
-static char incoming_data[INCOMING_DATA_BUFFER_SIZE];
-static char direct_method_name[DIRECT_METHOD_NAME_SIZE];
-static char response_topic[INCOMING_DATA_BUFFER_SIZE];
-static char response_data[] = "{\"isEnabled\":0,\"autoMode\":0,\"R\":\"000\",\"G\":\"000\",\"B\":\"000\"}";
+static esp_err_t mqttEventHandler(esp_mqtt_event_handle_t event);
+
+static char incomingData[INCOMING_DATA_BUFFER_SIZE];
+static char methodName[DIRECT_METHOD_NAME_SIZE];
+static char responseTopic[INCOMING_DATA_BUFFER_SIZE];
 
 static const char* host = IOT_CONFIG_IOTHUB_FQDN;
-static const char* mqtt_broker_uri = "mqtts://" IOT_CONFIG_IOTHUB_FQDN;
-static const char* device_id = IOT_CONFIG_DEVICE_ID;
-static const int mqtt_port = AZ_IOT_DEFAULT_MQTT_CONNECT_PORT;
+static const char* mqttBrokerUri = "mqtts://" IOT_CONFIG_IOTHUB_FQDN;
+static const char* deviceId = IOT_CONFIG_DEVICE_ID;
+static const int mqttPort = AZ_IOT_DEFAULT_MQTT_CONNECT_PORT;
 
-static char mqtt_client_id[128];
-static char mqtt_username[128];
-static char mqtt_password[200];
-static uint8_t sas_signature_buffer[256];
-static unsigned long next_telemetry_send_time_ms = 0;
-static char telemetry_topic[128];
-static uint8_t telemetry_payload[100];
-static uint32_t telemetry_send_count = 0;
+static char mqttClientId[128];
+static char mqttUsername[128];
+static char mqttPassword[200];
+static uint8_t sasSignatureBuffer[256];
 
-esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event);
+class AzIoTClient {
+  private:
+    unsigned long nextTelemetryTime = 0;
+    char telemetryTopic[128];
+    uint8_t telemetryPayload[100];
 
-void initializeIoTHubClient();
+    void getTelemetryPayload(az_span payload, az_span* out_payload);
+    void initIoTHubClient();
+    int initMqttClient();
+    void sendTelemetry();
 
-int initializeMqttClient();
+  public:
+    void sendResponse(az_span rid, uint16_t status, char * payload);
+    void init();
+    void check();
+};
 
-void azIoTClientLoop();
+extern AzIoTClient iotClient;
+
+// static char incomingData[INCOMING_DATA_BUFFER_SIZE];
+// static char methodName[DIRECT_METHOD_NAME_SIZE];
+// static char responseTopic[INCOMING_DATA_BUFFER_SIZE];
+// static char responseData[] = "{\"isEnabled\":0,\"autoMode\":0,\"R\":\"000\",\"G\":\"000\",\"B\":\"000\"}";
+
+// static const char* host = IOT_CONFIG_IOTHUB_FQDN;
+// static const char* mqttBrokerUri = "mqtts://" IOT_CONFIG_IOTHUB_FQDN;
+// static const char* deviceId = IOT_CONFIG_DEVICE_ID;
+// static const int mqttPort = AZ_IOT_DEFAULT_MQTT_CONNECT_PORT;
+
+// static char mqttClientId[128];
+// static char mqttUsername[128];
+// static char mqttPassword[200];
+// static uint8_t sasSignatureBuffer[256];
+// static unsigned long nextTelemetryTime = 0;
+// static char telemetryTopic[128];
+// static uint8_t telemetryPayload[100];
+// static uint32_t telemetrySendCount = 0;
+
+// esp_err_t mqttEventHandler(esp_mqtt_event_handle_t event);
+
+// void initIoTHubClient();
+
+// int initMqttClient();
+
+// void azIoTClientLoop();
 
 #endif //AZIOTCLIENTINITIALIZATION_H
