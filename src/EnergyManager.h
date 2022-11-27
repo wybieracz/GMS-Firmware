@@ -11,6 +11,7 @@
 #include "FlashManager.h"
 #include "LcdManager.h"
 #include "TimeManager.h"
+#include "RelayManager.h"
 
 #define ADC_BITS    10
 #define ADC_COUNTS  (1<<ADC_BITS)
@@ -52,8 +53,8 @@ class EnergyManager {
     double realPower, apparentPower, powerFactor, Vrms, Irms;
 
     //variables used to send avgs to db
-    bool first;
-    int sampleNo;
+    bool first; // ignore first period (unstable V, I read on startup)
+    int sampleCount;
     double dbV, dbI, dbP;
 
   public:
@@ -66,8 +67,9 @@ class EnergyManager {
     bool setReset(char status);
     bool setPeriod(char* data);
     void checkPeriod();
+    bool isFirstRead();
 
-    float kWh;
+    double kWh;
     double avgV, avgI, avgP;
 };
 

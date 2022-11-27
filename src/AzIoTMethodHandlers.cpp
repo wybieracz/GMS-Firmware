@@ -1,6 +1,6 @@
 #include "AzIoTMethodHandlers.h"
 
-bool telemetryEnabled = false;
+bool telemetryEnabled = true;
 
 bool enableTelemetry(int value) {
 
@@ -20,21 +20,21 @@ bool enableTelemetry(int value) {
   return false;
 }
 
-bool toggleRelay(int value) {
+// bool toggleRelay(int value) {
 
-  value -= 48;
+//   value -= 48;
     
-  if(value == 1) {
-    relayManager.close();
-    return true;
-  }
+//   if(value == 1) {
+//     relayManager.close();
+//     return true;
+//   }
 
-  if(value == 0) {
-    relayManager.open();
-    return true;
-  }
-  return false;
-}
+//   if(value == 0) {
+//     relayManager.open();
+//     return true;
+//   }
+//   return false;
+// }
 
 // bool setColor(char* ptr) {
 

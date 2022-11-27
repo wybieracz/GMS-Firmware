@@ -19,14 +19,15 @@
 #define MQTT_QOS1 1
 #define DO_NOT_RETAIN_MSG 0
 #define SAS_TOKEN_DURATION_IN_MINUTES 60
-#define INCOMING_DATA_BUFFER_SIZE 128
+#define INCOMING_DATA_BUFFER_SIZE 256
+#define OUTCOMING_DATA_BUFFER_SIZE 128
 #define DIRECT_METHOD_NAME_SIZE 64
 
 static esp_err_t mqttEventHandler(esp_mqtt_event_handle_t event);
 
 static char incomingData[INCOMING_DATA_BUFFER_SIZE];
 static char methodName[DIRECT_METHOD_NAME_SIZE];
-static char responseTopic[INCOMING_DATA_BUFFER_SIZE];
+static char responseTopic[OUTCOMING_DATA_BUFFER_SIZE];
 
 static const char* host = IOTHUB_FQDN;
 static const char* mqttBrokerUri = "mqtts://" IOTHUB_FQDN;
@@ -40,7 +41,7 @@ static uint8_t sasSignatureBuffer[256];
 
 class AzIoTClient {
   private:
-    unsigned long nextTelemetryTime = 0;
+    unsigned long nextTelemetryTime = TELEMETRY_FREQUENCY_MILLISECS;
     char telemetryTopic[128];
     uint8_t telemetryPayload[256];
 

@@ -5,7 +5,6 @@
 #include "EnergyManager.h"
 
 void setup() {
-  delay(2000);
   initPinout();
   flashManager.init();
   lcdManager.init();
@@ -15,6 +14,7 @@ void setup() {
   if(wifiManager.init()) {
     timeManager.init();
     iotClient.init();
+    digitalWrite(LED_GREEN, HIGH);
   } else {
     wifiManager.setAP();
   }
@@ -31,6 +31,7 @@ void loop() {
       energyManager.calc(20, 1000);
       energyManager.print();
       energyManager.display();
+      relayManager.checkRules();
     }
   } 
 }

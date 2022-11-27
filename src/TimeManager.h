@@ -17,19 +17,13 @@
 
 class TimeManager {
   private:
-    struct tm dataTime;
     short utc;
-    void refresh();
-    char dateString[17];
+    char dateString[20];
   public:
+    struct tm get;
+    void refresh(bool local);
     void init();
-    int getYear();
-    int getMonth();
-    int getDay();
-    int getHour();
-    int getMinutes();
-    int getSeconds();
-    char* getDataString();
+    char* getDataString(bool local, bool seconds);
 };
 
 extern TimeManager timeManager;

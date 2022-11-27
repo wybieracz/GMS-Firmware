@@ -12,6 +12,7 @@ EnergyManager::EnergyManager() {
   iRatio = I_CO *(SYSTEM_VOLTAGE / ADC_COUNTS);
   kWh = 0;
   lastmillis = millis();
+  first = true;
 }
 
 String kWhMem;
@@ -27,7 +28,7 @@ void EnergyManager::init() {
   if(kWhMem=="") kWhMem = "0.0";
   kWh = atof(kWhMem.c_str());
   Serial.print("START KWH: ");
-  Serial.println(kWh);
+  Serial.println(kWh, 5);
 
   resetMem = flashManager.read(RESET_PATH);
   if(resetMem=="") resetMem = "1";
@@ -135,19 +136,32 @@ void EnergyManager::calc(unsigned int crossings, unsigned int timeout) {
   //-------------------------------------------------------------------------------------------------------------------------
   //Calculation of the root of the mean of the voltage and current squared (rms) with calibration coefficients.
   Vrms = vRatio * sqrt(sumV / numberOfSamples);
-  Irms = iRatio * sqrt(sumI / numberOfSamples);
 
-  //Calculation power values
-  realPower = vRatio * iRatio * sumP / numberOfSamples;
-  apparentPower = Vrms * Irms;
-  powerFactor=realPower / apparentPower;
+  if(relayManager.getRelayState()) {
+    Irms = iRatio * sqrt(sumI / numberOfSamples);
+    //Calculation power values
+    realPower = vRatio * iRatio * sumP / numberOfSamples;
+    apparentPower = Vrms * Irms;
+    powerFactor = realPower / apparentPower;
+  } else {
+    Irms = 0.0;
+    realPower = 0.0;
+    apparentPower = 0.0;
+    powerFactor = 0.0;
+  }
+  
 
   //Reset accumulators
   sumV = 0;
   sumI = 0;
   sumP = 0;
-  if(!first) kWh = kWh + apparentPower*(millis()-lastmillis)/3600000000.0;
-  sampleNo++;
+  if(!first) {
+    dbV = dbV + Vrms;
+    dbI = dbI + Irms;
+    dbP = dbP + apparentPower;
+    kWh = kWh + apparentPower*(millis()-lastmillis)/3600000000.0;
+    sampleCount++;
+  }
   lastmillis = millis();
 }
 
@@ -166,13 +180,13 @@ void EnergyManager::print() {
   Serial.print("W");
   
   Serial.print("\tkWh: ");
-  Serial.print(kWh, 4);
+  Serial.print(kWh, 5);
   Serial.println("kWh");
   lastmillis = millis();
 }
 
 void EnergyManager::displayTime(int row) {
-  lcdManager.print(timeManager.getDataString(), 0, row);
+  lcdManager.print(timeManager.getDataString(true, false), 0, row);
 }
 
 void EnergyManager::displayVI(int row) {
@@ -214,7 +228,7 @@ void EnergyManager::displayP(int row) {
 
 void EnergyManager::displaykWh(int row) {
   lcdManager.print("kWh:", 0, row);
-  lcdManager.printFloat(kWh, 4, 4, row);
+  lcdManager.printFloat(kWh, 5, 4, row);
 }
 
 void EnergyManager::display() {
@@ -232,19 +246,22 @@ void EnergyManager::display() {
 }
 
 void EnergyManager::calcAvg() {
-  avgV = dbV / sampleNo;
-  avgI = dbI / sampleNo;
-  avgP = dbP / sampleNo;
+  if(sampleCount > 0) {
+    avgV = dbV / sampleCount;
+    avgI = dbI / sampleCount;
+    avgP = dbP / sampleCount;
+  }
   dbV = 0.0;
   dbI = 0.0;
   dbP = 0.0;
-  sampleNo = 0;
-  if(first) first = !first;
+  sampleCount = 0; 
 }
 
 void EnergyManager::saveKWh() {
-  char result[128]; // Buffer big enough for 7-character float
-  dtostrf(kWh, 1, 5, result); // Leave room for too large numbers!
+  char result[64];
+  dtostrf(kWh, 1, 8, result);
+  Serial.print("ZAPIS KWH:::");
+  Serial.println(result);
   flashManager.write(KWH_PATH, result);
 }
 
@@ -280,18 +297,30 @@ bool EnergyManager::setPeriod(char* data) {
 
 void EnergyManager::setLastDay(int today) {
   char temp[3];
-  lastDay = timeManager.getDay();
+  timeManager.refresh(false);
+  lastDay = timeManager.get.tm_mday;
   itoa(lastDay, temp, 10);
-  flashManager.write(PERIOD_PATH, temp);
+  flashManager.write(LAST_DAY_PATH, temp);
 }
 
 void EnergyManager::checkPeriod() {
-  int today = timeManager.getDay();
+  timeManager.refresh(false);
+  int today = timeManager.get.tm_mday;
   if(reset && today == period && today != lastDay) {
-    setLastDay(today);
     resetKWh();
   }
+  if(today != lastDay) {
+    setLastDay(today);
+  }
   saveKWh();
+}
+
+bool EnergyManager::isFirstRead() {
+  if(first) {
+    first = false;
+    return true;
+  }
+  return false;
 }
 
 EnergyManager energyManager;

@@ -15,6 +15,8 @@
 #define RESET_PATH "/reset.txt"
 #define PERIOD_PATH "/period.txt"
 #define LAST_DAY_PATH "/day.txt"
+#define MODE_PATH "/mode.txt"
+#define RULES_PATH "/rules.txt"
 
 class FlashManager {
   public:
