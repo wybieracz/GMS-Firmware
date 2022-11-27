@@ -25,4 +25,19 @@ void RelayManager::close() {
   flashManager.write(RELAY_PATH, "1");
 }
 
+bool RelayManager::toggle(char status) {
+
+  if(status == 48) {
+    open();
+    return true;
+  }
+
+  if(status == 49) {
+    close();
+    return true;
+  }
+
+  return false;
+}
+
 RelayManager relayManager;

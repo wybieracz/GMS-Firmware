@@ -2,25 +2,47 @@
 
 LiquidCrystal lcd(RS, E, D4, D5, D6, D7);
 
-void LcdManager::init() {
+LcdManager::LcdManager() {
   lcd.begin(16, 2);
   ledcSetup(LED_CH, FREQ, LED_RES);
   ledcAttachPin(LED_LCD, LED_CH);
-
-  lcdState = flashManager.read(LCD_PATH);
-  if(lcdState=="") lcdState = "255";
-
-  (void)setBrightness(atoi(lcdState.c_str()));
   lcd.setCursor(0, 0);
 }
 
-bool LcdManager::setBrightness(int brightness) {
-  if(brightness >= 0 && brightness <= 255) {
-    char brightnessString[4];
-    flashManager.write(LCD_PATH, itoa(brightness, brightnessString, 10));
-    ledcWrite(LED_CH, brightness);
-    return true;
-  } else return false;
+void LcdManager::init() {
+  
+  brightnessMem = flashManager.read(LCD_BRIGHTNESS_PATH);
+  if(brightnessMem=="") brightnessMem = "255";
+  ledcWrite(LED_CH, atoi(brightnessMem.c_str()));
+
+  settingsMem = flashManager.read(LCD_SETTINGS_PATH);
+  if(settingsMem=="") settingsMem = "12";
+  strcpy(settings, settingsMem.c_str());
+}
+
+bool LcdManager::setBrightness(char* data) {
+
+  int temp = atoi(data);
+
+  if(temp < 0 && temp > 255) return false;
+  brightness = temp;
+  ledcWrite(LED_CH, brightness);
+  flashManager.write(LCD_BRIGHTNESS_PATH, data);
+  return true;
+}
+
+bool LcdManager::setDisplay(char* data) {
+
+  if(data[0] < 49 || data[0] > 52 || data[0] < 49 || data[1] > 52) return false;
+  settings[0] = data[0];
+  settings[1] = data[1];
+  settings[3] = '\0';
+  flashManager.write(LCD_SETTINGS_PATH, settings);
+  return true;
+}
+
+char* LcdManager::getSettings() {
+  return settings;
 }
 
 void LcdManager::print(char* text, int x, int y) {

@@ -1,14 +1,5 @@
 #include "FlashManager.h"
 
-// String ssid;
-// String pass;
-// String relayStateMem;
-// String lcdState;
-// const char* ssidPath = "/ssid.txt";
-// const char* passPath = "/pass.txt";
-//const char* relayStatePath = "/relay.txt";
-//const char* lcdStatePath = "/lcd.txt";
-
 // Initialize SPIFFS
 void FlashManager::init() {
   if (!SPIFFS.begin(true)) {

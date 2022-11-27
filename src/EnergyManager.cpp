@@ -14,6 +14,40 @@ EnergyManager::EnergyManager() {
   lastmillis = millis();
 }
 
+String kWhMem;
+    String resetMem;
+    short int reset;
+    String periodMem;
+    short int period;
+    String lastDayMem;
+    short int lastDay;
+
+void EnergyManager::init() {
+  kWhMem = flashManager.read(KWH_PATH);
+  if(kWhMem=="") kWhMem = "0.0";
+  kWh = atof(kWhMem.c_str());
+  Serial.print("START KWH: ");
+  Serial.println(kWh);
+
+  resetMem = flashManager.read(RESET_PATH);
+  if(resetMem=="") resetMem = "1";
+  reset = atoi(resetMem.c_str());
+  Serial.print("START RESET: ");
+  Serial.println(reset);
+
+  periodMem = flashManager.read(PERIOD_PATH);
+  if(periodMem=="") periodMem = "1";
+  period = atoi(periodMem.c_str());
+  Serial.print("START PERIOD: ");
+  Serial.println(period);
+
+  lastDayMem = flashManager.read(LAST_DAY_PATH);
+  if(lastDayMem=="") lastDayMem = "1";
+  lastDay = atoi(lastDayMem.c_str());
+  Serial.print("START LASTDAY: ");
+  Serial.println(lastDay);
+}
+
 //--------------------------------------------------------------------------------------
 // Calculates realPower,apparentPower,powerFactor,Vrms,Irms,kWh increment
 // From a sample window of the mains AC voltage and current.
@@ -100,11 +134,7 @@ void EnergyManager::calc(unsigned int crossings, unsigned int timeout) {
   // 3) Post loop calculations
   //-------------------------------------------------------------------------------------------------------------------------
   //Calculation of the root of the mean of the voltage and current squared (rms) with calibration coefficients.
-
-  //double V_RATIO = V_CO *(SYSTEM_VOLTAGE / ADC_COUNTS);
   Vrms = vRatio * sqrt(sumV / numberOfSamples);
-
-  //double I_RATIO = I_CO *(SYSTEM_VOLTAGE / ADC_COUNTS);
   Irms = iRatio * sqrt(sumI / numberOfSamples);
 
   //Calculation power values
@@ -116,23 +146,19 @@ void EnergyManager::calc(unsigned int crossings, unsigned int timeout) {
   sumV = 0;
   sumI = 0;
   sumP = 0;
-  kWh = kWh + apparentPower*(millis()-lastmillis)/3600000000.0;
+  if(!first) kWh = kWh + apparentPower*(millis()-lastmillis)/3600000000.0;
+  sampleNo++;
   lastmillis = millis();
 }
 
 void EnergyManager::print() {
-  //calcVI(20, 1000);
-  lcdManager.clear();
+
   Serial.print("Vrms: ");
-  lcdManager.print("Vrms: ", 0, 0);
   Serial.print(Vrms, 2);
-  lcdManager.printFloat((float)Vrms, 2, 6, 0);
   Serial.print("V");
-  
+
   Serial.print("\tIrms: ");
-  lcdManager.print("Irms: ", 0, 1);
   Serial.print(Irms, 4);
-  lcdManager.printFloat((float)Irms, 2, 6, 1);
   Serial.print("A");
   
   Serial.print("\tPower: ");
@@ -140,24 +166,132 @@ void EnergyManager::print() {
   Serial.print("W");
   
   Serial.print("\tkWh: ");
-  kWh = kWh + apparentPower*(millis()-lastmillis)/3600000000.0;
   Serial.print(kWh, 4);
   Serial.println("kWh");
   lastmillis = millis();
 }
 
-EnergyManager energyManager;
+void EnergyManager::displayTime(int row) {
+  lcdManager.print(timeManager.getDataString(), 0, row);
+}
 
-// void EnergyManager::serialprint() {
-//   Serial.print(realPower);
-//   Serial.print(' ');
-//   Serial.print(apparentPower);
-//   Serial.print(' ');
-//   Serial.print(Vrms);
-//   Serial.print(' ');
-//   Serial.print(Irms);
-//   Serial.print(' ');
-//   Serial.print(powerFactor);
-//   Serial.println(' ');
-//   delay(100);
-// }
+void EnergyManager::displayVI(int row) {
+  if(Vrms < 10.0) {
+    lcdManager.print("V:00", 0, row);
+    lcdManager.printFloat((float)Vrms, 2, 4, row);
+  } else if(Vrms < 100.0) {
+    lcdManager.print("V:0", 0, row);
+    lcdManager.printFloat((float)Vrms, 2, 3, row);
+  } else {
+    lcdManager.print("V:", 0, row);
+    lcdManager.printFloat((float)Vrms, 2, 2, row);
+  }
+
+  if(Irms < 10.0) {
+    lcdManager.print("I:0", 9, row);
+    lcdManager.printFloat((float)Irms, 2, 12, row);
+  } else {
+    lcdManager.print("I:", 9, row);
+    lcdManager.printFloat((float)Irms, 2, 11, row);
+  }
+}
+
+void EnergyManager::displayP(int row) {
+  if(Vrms < 10.0) {
+    lcdManager.print("P:000", 0, row);
+    lcdManager.printFloat((float)Vrms, 2, 5, row);
+  } else if(Vrms < 100.0) {
+    lcdManager.print("P:00", 0, row);
+    lcdManager.printFloat((float)Vrms, 2, 4, row);
+  } else if(Vrms < 1000.0) {
+    lcdManager.print("P:", 0, row);
+    lcdManager.printFloat((float)Vrms, 2, 3, row);
+  } else {
+    lcdManager.print("P:", 0, row);
+    lcdManager.printFloat((float)apparentPower, 2, 2, row);
+  }
+}
+
+void EnergyManager::displaykWh(int row) {
+  lcdManager.print("kWh:", 0, row);
+  lcdManager.printFloat(kWh, 4, 4, row);
+}
+
+void EnergyManager::display() {
+  char* settings = lcdManager.getSettings();
+  lcdManager.clear();
+  for(int i = 0; i < 2; i++) {
+    switch(settings[i]) {
+      case '1': displayTime(i); break;
+      case '2': displayVI(i); break;
+      case '3': displayP(i); break;
+      case '4': displaykWh(i); break;
+      default: displayTime(i); break;
+    }
+  }
+}
+
+void EnergyManager::calcAvg() {
+  avgV = dbV / sampleNo;
+  avgI = dbI / sampleNo;
+  avgP = dbP / sampleNo;
+  dbV = 0.0;
+  dbI = 0.0;
+  dbP = 0.0;
+  sampleNo = 0;
+  if(first) first = !first;
+}
+
+void EnergyManager::saveKWh() {
+  char result[128]; // Buffer big enough for 7-character float
+  dtostrf(kWh, 1, 5, result); // Leave room for too large numbers!
+  flashManager.write(KWH_PATH, result);
+}
+
+void EnergyManager::resetKWh() {
+  kWh = 0.0;
+  flashManager.write(KWH_PATH, "0.0");
+}
+
+bool EnergyManager::setReset(char status) {
+
+  if(status == 48) {
+    reset = false;
+    flashManager.write(RESET_PATH, "0");
+    return true;
+  }
+
+  if(status == 49) {
+    reset = true;
+    flashManager.write(RESET_PATH, "1");
+    return true;
+  }
+
+  return false;
+}
+
+bool EnergyManager::setPeriod(char* data) {
+  int temp = atoi(data);
+  if(temp < 0 && temp > 28) return false;
+  period = temp;
+  flashManager.write(PERIOD_PATH, data);
+  return true;
+}
+
+void EnergyManager::setLastDay(int today) {
+  char temp[3];
+  lastDay = timeManager.getDay();
+  itoa(lastDay, temp, 10);
+  flashManager.write(PERIOD_PATH, temp);
+}
+
+void EnergyManager::checkPeriod() {
+  int today = timeManager.getDay();
+  if(reset && today == period && today != lastDay) {
+    setLastDay(today);
+    resetKWh();
+  }
+  saveKWh();
+}
+
+EnergyManager energyManager;

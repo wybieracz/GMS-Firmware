@@ -13,6 +13,7 @@ class RelayManager {
     void init();
     void open();
     void close();
+    bool toggle(char status);
 };
 
 extern RelayManager relayManager;

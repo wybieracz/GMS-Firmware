@@ -5,7 +5,7 @@ static az_iot_hub_client client;
 static esp_mqtt_client_handle_t mqtt_client;
 static AzIoTSasToken sasToken(
   &client,
-  AZ_SPAN_FROM_STR(IOT_CONFIG_DEVICE_KEY),
+  AZ_SPAN_FROM_STR(DEVICE_KEY),
   AZ_SPAN_FROM_BUFFER(mqttPassword),
   AZ_SPAN_FROM_BUFFER(sasSignatureBuffer)
 );
@@ -84,25 +84,28 @@ static esp_err_t mqttEventHandler(esp_mqtt_event_handle_t event) {
       incomingData[i] = '\0';
       logger.info("Data: " + String(incomingData));
 
-      if(String(methodName).equals("enableTelemetry")){
+      if(String(methodName).equals("enableTelemetry")) {
         enableTelemetry(incomingData[1]) ? status = 200 : status = 400;
-        iotClient.sendResponse(az_span_create_from_str(ptr), status, NULL);
       }
-      else if(String(methodName).equals("toggleRelay")){
-        toggleRelay(incomingData[1]) ? status = 200 : status = 400;
-        iotClient.sendResponse(az_span_create_from_str(ptr), status, NULL);
+      else if(String(methodName).equals("toggleRelay")) {
+        relayManager.toggle(incomingData[0]) ? status = 200 : status = 400;
       }
-      else if(String(methodName).equals("func3")){
-        //func3(incomingData[1]) ? status = 200 : status = 400;
-        //sendResponse(az_span_create_from_str(ptr), status, NULL);
+      else if(String(methodName).equals("setDisplay")) {
+        lcdManager.setDisplay(incomingData) ? status = 200 : status = 400;
       }
-      else if(String(methodName).equals("func4")){
-        //func4(responseData) ? status = 200 : status = 400;
-        //sendResponse(az_span_create_from_str(ptr), status, responseData);
+      else if(String(methodName).equals("setBrightness")){
+        lcdManager.setBrightness(incomingData) ? status = 200 : status = 400;
+      }
+      else if(String(methodName).equals("setReset")){
+        energyManager.setReset(incomingData[0]) ? status = 200 : status = 400;
+      }
+      else if(String(methodName).equals("setBrightness")){
+        energyManager.setPeriod(incomingData) ? status = 200 : status = 400;
       }
       else {
         status = 404;
       }
+      iotClient.sendResponse(az_span_create_from_str(ptr), status, NULL);
       logger.info("Code: " + String(status));
       break;
 
@@ -211,22 +214,28 @@ int AzIoTClient::initMqttClient() {
 
 void AzIoTClient::getTelemetryPayload(az_span payload, az_span* out_payload) {
 
-  double voltage = static_cast <float> (rand()) / (static_cast <float> (RAND_MAX/250.0));
-  double current = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-
+  char* data = timeManager.getDataString();
   az_span original_payload = payload;
+
+  Serial.println(energyManager.avgV);
+  Serial.println(energyManager.avgI);
+  Serial.println(energyManager.avgP);
+  Serial.println(energyManager.kWh);
 
   payload = az_span_copy(payload, AZ_SPAN_FROM_STR("{ \"deviceId\": \""));
   payload = az_span_copy(payload, AZ_SPAN_FROM_STR(DEVICE_ID));
   payload = az_span_copy(payload, AZ_SPAN_FROM_STR("\", \"voltage\": "));
-  (void)az_span_dtoa(payload, voltage, 4, &payload);
+  (void)az_span_dtoa(payload, energyManager.avgV, 4, &payload);
   payload = az_span_copy(payload, AZ_SPAN_FROM_STR(", \"current\": "));
-  (void)az_span_dtoa(payload, current, 4, &payload);
+  (void)az_span_dtoa(payload, energyManager.avgI, 4, &payload);
+  payload = az_span_copy(payload, AZ_SPAN_FROM_STR("\", \"power\": "));
+  (void)az_span_dtoa(payload, energyManager.avgP, 4, &payload);
+  payload = az_span_copy(payload, AZ_SPAN_FROM_STR(", \"kWh\": "));
+  (void)az_span_dtoa(payload, energyManager.kWh, 4, &payload);
   payload = az_span_copy(payload, AZ_SPAN_FROM_STR(", \"timestamp\": "));
-  (void)az_span_u32toa(payload, (uint32_t)time(NULL), &payload);
+  payload = az_span_copy(payload, AZ_SPAN_FROM_BUFFER(data));
   payload = az_span_copy(payload, AZ_SPAN_FROM_STR(" }"));
   payload = az_span_copy_u8(payload, '\0');
-
   *out_payload = az_span_slice(original_payload, 0, az_span_size(original_payload) - az_span_size(payload) - 1);
 }
 
@@ -243,9 +252,9 @@ void AzIoTClient::sendTelemetry() {
     logger.error("Failed az_iot_hub_client_telemetry_get_publish_topic");
     return;
   }
-
+  
   getTelemetryPayload(telemetry, &telemetry);
-
+  
   if (esp_mqtt_client_publish(
           mqtt_client,
           telemetryTopic,
@@ -274,7 +283,11 @@ void AzIoTClient::check() {
     (void)esp_mqtt_client_destroy(mqtt_client);
     initMqttClient();
   } else if (millis() > nextTelemetryTime) {
-    if (telemetryEnabled) sendTelemetry();
+    if (telemetryEnabled) {
+      energyManager.checkPeriod();
+      energyManager.calcAvg();
+      sendTelemetry();
+    }
     nextTelemetryTime = millis() + TELEMETRY_FREQUENCY_MILLISECS;
   }
 }

@@ -5,16 +5,15 @@
 #include "EnergyManager.h"
 
 void setup() {
-
+  delay(2000);
   initPinout();
   flashManager.init();
   lcdManager.init();
   relayManager.init();
+  energyManager.init();
 
   if(wifiManager.init()) {
     timeManager.init();
-    // initIoTHubClient();
-    // (void)initMqttClient();
     iotClient.init();
   } else {
     wifiManager.setAP();
@@ -29,9 +28,9 @@ void loop() {
     }
     else {
       iotClient.check();
-      // azIoTClientLoop();
       energyManager.calc(20, 1000);
       energyManager.print();
+      energyManager.display();
     }
   } 
 }

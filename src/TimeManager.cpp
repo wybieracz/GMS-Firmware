@@ -20,6 +20,7 @@ void TimeManager::init() {
   
   Serial.println("");
   gmtime_r(&now, &dataTime);
+  utc = 1;
   logger.info("Time initialized!");
 }
 
@@ -51,6 +52,39 @@ int TimeManager::getMinutes() {
 int TimeManager::getSeconds() {
   refresh();
   return dataTime.tm_sec;
+}
+
+char* TimeManager::getDataString() {
+  refresh();
+
+  itoa(dataTime.tm_year + UNIX_EPOCH_START_YEAR, dateString, 10);
+  dateString[4] = '-';
+
+  if(dataTime.tm_mon < 10) {
+    dateString[5] = '0';
+    itoa(dataTime.tm_mon, dateString + 6, 10);
+  } else itoa(dataTime.tm_mon, dateString + 5, 10);
+  dateString[7] = '-';
+
+  if(dataTime.tm_mday < 10) {
+    dateString[8] = '0';
+    itoa(dataTime.tm_mday, dateString + 9, 10);
+  } else itoa(dataTime.tm_mday, dateString + 8, 10);
+  dateString[10] = ' ';
+
+  if(dataTime.tm_hour < 10) {
+    dateString[11] = '0';
+    itoa(dataTime.tm_hour, dateString + 12, 10);
+  } else itoa(dataTime.tm_hour + utc, dateString + 11, 10);
+  dateString[13] = ':';
+
+  if(dataTime.tm_min < 10) {
+    dateString[14] = '0';
+    itoa(dataTime.tm_min, dateString + 15, 10);
+  } else itoa(dataTime.tm_min, dateString + 14, 10);
+  dateString[16] = '\0';
+
+  return dateString;
 }
 
 TimeManager timeManager;

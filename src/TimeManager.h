@@ -18,7 +18,9 @@
 class TimeManager {
   private:
     struct tm dataTime;
+    short utc;
     void refresh();
+    char dateString[17];
   public:
     void init();
     int getYear();
@@ -27,6 +29,7 @@ class TimeManager {
     int getHour();
     int getMinutes();
     int getSeconds();
+    char* getDataString();
 };
 
 extern TimeManager timeManager;
