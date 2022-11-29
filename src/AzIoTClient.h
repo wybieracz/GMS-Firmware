@@ -42,8 +42,7 @@ static uint8_t sasSignatureBuffer[256];
 class AzIoTClient {
   private:
     unsigned long nextTelemetryTime = TELEMETRY_FREQUENCY_MILLISECS;
-    char telemetryTopic[128];
-    uint8_t telemetryPayload[256];
+    char topicBuffer[128];
 
     void getTelemetryPayload(az_span payload, az_span* out_payload);
     void initIoTHubClient();
@@ -51,7 +50,9 @@ class AzIoTClient {
     void sendTelemetry();
 
   public:
-    void sendResponse(az_span rid, uint16_t status, char * payload);
+    uint8_t payloadBuffer[256];
+    void sendResponse(az_span rid, uint16_t status, char * payload, int size);
+    void getStatusPayload(az_span payload, az_span* out_payload);
     void init();
     void check();
 };

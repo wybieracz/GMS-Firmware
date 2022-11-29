@@ -1,14 +1,12 @@
 #include "RelayManager.h"
 
-bool relayState = false;
-
 void RelayManager::init() {
-  relayStateMem = flashManager.read(RELAY_PATH);
-  if(relayStateMem == "1") {
-    relayState = true;
+  stateMem = flashManager.read(RELAY_PATH);
+  if(stateMem == "1") {
+    state = true;
     digitalWrite(RELAY, HIGH);
   } else {
-    relayState = false;
+    state = false;
     digitalWrite(RELAY, LOW);
   }
 
@@ -28,13 +26,13 @@ void RelayManager::init() {
 }
 
 void RelayManager::open() {
-  relayState = false;
+  state = false;
   digitalWrite(RELAY, LOW);
   flashManager.write(RELAY_PATH, "0");
 }
 
 void RelayManager::close() {
-  relayState = true;
+  state = true;
   digitalWrite(RELAY, HIGH);
   flashManager.write(RELAY_PATH, "1");
 }
@@ -52,10 +50,6 @@ bool RelayManager::toggle(char status) {
   }
 
   return false;
-}
-
-bool RelayManager::getRelayState() {
-  return relayState;
 }
 
 bool RelayManager::setMode(char* data) {
@@ -88,24 +82,24 @@ void RelayManager::checkRulesTimeMode() {
   Serial.println(now);
   Serial.println(limDate);
   if(now > limDate) {
-    if(rules[0] == 48 && relayState) {
-      relayState = false;
+    if(rules[0] == 48 && state) {
+      state = false;
       digitalWrite(RELAY, LOW);
       flashManager.write(RELAY_PATH, "0");
     }
-    if(rules[0] == 49 && !relayState) {
-      relayState = true;
+    if(rules[0] == 49 && !state) {
+      state = true;
       digitalWrite(RELAY, HIGH);
       flashManager.write(RELAY_PATH, "1");
     }
   } else {
-    if(rules[0] == 49 && relayState) {
-      relayState = false;
+    if(rules[0] == 49 && state) {
+      state = false;
       digitalWrite(RELAY, LOW);
       flashManager.write(RELAY_PATH, "0");
     }
-    if(rules[0] == 48 && !relayState) {
-      relayState = true;
+    if(rules[0] == 48 && !state) {
+      state = true;
       digitalWrite(RELAY, HIGH);
       flashManager.write(RELAY_PATH, "1");
     }
@@ -164,13 +158,13 @@ void RelayManager::checkRulesAutoMode() {
     } else ptr = ptr + 9;
   }
 
-  if(relayState != newRelayState) {
+  if(state != newRelayState) {
     if(newRelayState) {
-      relayState = true;
+      state = true;
       digitalWrite(RELAY, HIGH);
       flashManager.write(RELAY_PATH, "1");
     } else {
-      relayState = false;
+      state = false;
       digitalWrite(RELAY, LOW);
       flashManager.write(RELAY_PATH, "0");
     }

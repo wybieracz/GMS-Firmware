@@ -13,7 +13,8 @@ void LcdManager::init() {
   
   brightnessMem = flashManager.read(LCD_BRIGHTNESS_PATH);
   if(brightnessMem=="") brightnessMem = "255";
-  ledcWrite(LED_CH, atoi(brightnessMem.c_str()));
+  brightness = atoi(brightnessMem.c_str());
+  ledcWrite(LED_CH, brightness);
 
   settingsMem = flashManager.read(LCD_SETTINGS_PATH);
   if(settingsMem=="") settingsMem = "12";

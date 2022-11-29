@@ -8,21 +8,20 @@
 
 class RelayManager {
   private:
-    short int mode;
     String modeMem;
-    bool relayState;
-    String relayStateMem;
-    char rules[200];
     String rulesMem;
+    String stateMem;
     long int limDate;
     void close();
     void open();
     void checkRulesTimeMode();
     void checkRulesAutoMode();
   public:
+    bool state;
+    short int mode;
+    char rules[200];
     void init();
     bool toggle(char status);
-    bool getRelayState();
     bool setMode(char* data);
     void checkRules();
 };

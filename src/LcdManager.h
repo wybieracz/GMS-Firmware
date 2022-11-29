@@ -12,10 +12,10 @@
 class LcdManager {
   private:
     String brightnessMem;
-    int brightness;
     String settingsMem;
-    char settings[3];
   public:
+    int brightness;
+    char settings[3];
   LcdManager();
   void init();
   bool setBrightness(char* data);
@@ -27,17 +27,5 @@ class LcdManager {
 };
 
 extern LcdManager lcdManager;
-
-// static int brightness = 255;
-
-// void initLCD();
-
-// bool setLcdBrightness(int brightness);
-
-// void lcdPrint(char* text, int x, int y);
-
-// void lcdPrintFloat(float value, int precision, int x, int y);
-
-// void lcdClear();
 
 #endif //LCDMANAGER_H

@@ -43,9 +43,7 @@ class EnergyManager {
 
     String kWhMem; // Uset to store values in flash
     String resetMem;
-    short int reset; // If reset kWh on first day of period
     String periodMem;
-    short int period; // First day of period
     String lastDayMem;
     short int lastDay;  // Day of last mesurement
 
@@ -71,6 +69,9 @@ class EnergyManager {
 
     double kWh;
     double avgV, avgI, avgP;
+
+    short int period; // First day of period
+    short int reset; // If reset kWh on first day of period
 };
 
 extern EnergyManager energyManager;

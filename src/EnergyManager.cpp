@@ -15,13 +15,13 @@ EnergyManager::EnergyManager() {
   first = true;
 }
 
-String kWhMem;
-    String resetMem;
-    short int reset;
-    String periodMem;
-    short int period;
-    String lastDayMem;
-    short int lastDay;
+// String kWhMem;
+//     String resetMem;
+//     short int reset;
+//     String periodMem;
+//     short int period;
+//     String lastDayMem;
+//     short int lastDay;
 
 void EnergyManager::init() {
   kWhMem = flashManager.read(KWH_PATH);
@@ -137,7 +137,7 @@ void EnergyManager::calc(unsigned int crossings, unsigned int timeout) {
   //Calculation of the root of the mean of the voltage and current squared (rms) with calibration coefficients.
   Vrms = vRatio * sqrt(sumV / numberOfSamples);
 
-  if(relayManager.getRelayState()) {
+  if(relayManager.state) {
     Irms = iRatio * sqrt(sumI / numberOfSamples);
     //Calculation power values
     realPower = vRatio * iRatio * sumP / numberOfSamples;
