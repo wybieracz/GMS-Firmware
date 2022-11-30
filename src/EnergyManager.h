@@ -70,7 +70,7 @@ class EnergyManager {
     double kWh;
     double avgV, avgI, avgP;
 
-    short int period; // First day of period
+    short int periodStart; // First day of periodStart
     short int reset; // If reset kWh on first day of period
 };
 

@@ -19,7 +19,7 @@ EnergyManager::EnergyManager() {
 //     String resetMem;
 //     short int reset;
 //     String periodMem;
-//     short int period;
+//     short int periodStart;
 //     String lastDayMem;
 //     short int lastDay;
 
@@ -38,9 +38,9 @@ void EnergyManager::init() {
 
   periodMem = flashManager.read(PERIOD_PATH);
   if(periodMem=="") periodMem = "1";
-  period = atoi(periodMem.c_str());
+  periodStart = atoi(periodMem.c_str());
   Serial.print("START PERIOD: ");
-  Serial.println(period);
+  Serial.println(periodStart);
 
   lastDayMem = flashManager.read(LAST_DAY_PATH);
   if(lastDayMem=="") lastDayMem = "1";
@@ -290,7 +290,7 @@ bool EnergyManager::setReset(char status) {
 bool EnergyManager::setPeriod(char* data) {
   int temp = atoi(data);
   if(temp < 0 && temp > 28) return false;
-  period = temp;
+  periodStart = temp;
   flashManager.write(PERIOD_PATH, data);
   return true;
 }
@@ -306,7 +306,7 @@ void EnergyManager::setLastDay(int today) {
 void EnergyManager::checkPeriod() {
   timeManager.refresh(false);
   int today = timeManager.get.tm_mday;
-  if(reset && today == period && today != lastDay) {
+  if(reset && today == periodStart && today != lastDay) {
     resetKWh();
   }
   if(today != lastDay) {

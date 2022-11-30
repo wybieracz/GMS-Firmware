@@ -43,11 +43,14 @@ class AzIoTClient {
   private:
     unsigned long nextTelemetryTime = TELEMETRY_FREQUENCY_MILLISECS;
     char topicBuffer[128];
+    String registeredMem;
+    bool registered;
 
     void getTelemetryPayload(az_span payload, az_span* out_payload);
     void initIoTHubClient();
     int initMqttClient();
     void sendTelemetry();
+    bool changeRegisterState(int state);
 
   public:
     uint8_t payloadBuffer[256];

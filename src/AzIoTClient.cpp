@@ -85,7 +85,7 @@ static esp_err_t mqttEventHandler(esp_mqtt_event_handle_t event) {
       logger.info("Data: " + String(incomingData));
 
       if(String(methodName).equals("enableTelemetry")) {
-        enableTelemetry(incomingData[1]) ? status = 200 : status = 400;
+        enableTelemetry(incomingData[0]) ? status = 200 : status = 400;
         iotClient.sendResponse(az_span_create_from_str(ptr), status, NULL, 0);
       }
       else if(String(methodName).equals("setDisplay")) {
@@ -100,7 +100,7 @@ static esp_err_t mqttEventHandler(esp_mqtt_event_handle_t event) {
         energyManager.setReset(incomingData[0]) ? status = 200 : status = 400;
         iotClient.sendResponse(az_span_create_from_str(ptr), status, NULL, 0);
       }
-      else if(String(methodName).equals("setBrightness")) {
+      else if(String(methodName).equals("setPeriod")) {
         energyManager.setPeriod(incomingData) ? status = 200 : status = 400;
         iotClient.sendResponse(az_span_create_from_str(ptr), status, NULL, 0);
       }
@@ -116,7 +116,26 @@ static esp_err_t mqttEventHandler(esp_mqtt_event_handle_t event) {
           iotClient.getStatusPayload(devStatus, &devStatus);
           iotClient.sendResponse(az_span_create_from_str(ptr), 200, (char*)az_span_ptr(devStatus), az_span_size(devStatus));
         }
-        
+      }
+      else if(String(methodName).equals("setSettings")) {
+        energyManager.setReset(incomingData[3]) ? status = 200 : status = 400;
+        incomingData[3] = '\0';
+        if(status == 200) energyManager.setPeriod(incomingData + 1) ? status = 200 : status = 400;
+        if(status == 200) lcdManager.setDisplay(incomingData + 4) ? status = 200 : status = 400;
+        incomingData[event->data_len - 1] = '\0';
+        if(status == 200) lcdManager.setBrightness(incomingData + 6) ? status = 200 : status = 400;
+        az_span devStatus = AZ_SPAN_FROM_BUFFER(iotClient.payloadBuffer);
+        iotClient.getStatusPayload(devStatus, &devStatus);
+        iotClient.sendResponse(az_span_create_from_str(ptr), status, (char*)az_span_ptr(devStatus), az_span_size(devStatus));
+      }
+      else if(String(methodName).equals("setRegistered")) {
+        changeRegisterState(incomingData) ? status = 200 : status = 400;
+        if(incomingData[0] == 48) {
+          iotClient.sendResponse(az_span_create_from_str(ptr), status, "0", 1);
+          ESP.restart();
+        } else if(incomingData[0] = 49) {
+          iotClient.sendResponse(az_span_create_from_str(ptr), status, "1", 1);
+        }
       }
       else {
         status = 404;
@@ -270,7 +289,11 @@ void AzIoTClient::getStatusPayload(az_span payload, az_span* out_payload) {
   (void)az_span_i32toa(payload, relayManager.mode, &payload);
   payload = az_span_copy(payload, AZ_SPAN_FROM_STR(", \"rules\": \""));
   payload = az_span_copy(payload, az_span_create_from_str(relayManager.rules));
-  payload = az_span_copy(payload, AZ_SPAN_FROM_STR("\", \"brightness\": "));
+  payload = az_span_copy(payload, AZ_SPAN_FROM_STR("\", \"reset\": "));
+  (void)az_span_i32toa(payload, energyManager.reset, &payload);
+  payload = az_span_copy(payload, AZ_SPAN_FROM_STR(", \"periodStart\": "));
+  (void)az_span_i32toa(payload, energyManager.periodStart, &payload);
+  payload = az_span_copy(payload, AZ_SPAN_FROM_STR(", \"brightness\": "));
   (void)az_span_i32toa(payload, lcdManager.brightness, &payload);
   payload = az_span_copy(payload, AZ_SPAN_FROM_STR(", \"lcdSettings\": \""));
   payload = az_span_copy(payload, az_span_create_from_str(lcdManager.settings));
@@ -312,7 +335,9 @@ void AzIoTClient::sendTelemetry() {
 }
 
 void AzIoTClient::init() {
-
+  registeredMem = flashManager.read(REGISTERED_PATH);
+  if(registeredMem == "1") registered = true;
+  else registered = false;
   initIoTHubClient();
   (void)initMqttClient();
 }
@@ -328,11 +353,37 @@ void AzIoTClient::check() {
     if(!energyManager.isFirstRead()) {
       energyManager.checkPeriod();
       energyManager.calcAvg();
-      if (telemetryEnabled) sendTelemetry();
+      if (registered) sendTelemetry();
     }
     
     nextTelemetryTime = millis() + TELEMETRY_FREQUENCY_MILLISECS;
   }
+}
+
+bool AzIoTClient::changeRegisterState(int state) {
+  if(value == 49) {
+    registered = true;
+    flashManager.write(REGISTERED_PATH, "1");
+    return true;
+  }
+  
+  if(value == 48) {
+    registered = false;
+    flashManager.write(SSID_PATH, "");
+    flashManager.write(PASS_PATH, "");
+    flashManager.write(RELAY_PATH, "");
+    flashManager.write(LCD_BRIGHTNESS_PATH, "");
+    flashManager.write(LCD_SETTINGS_PATH, "");
+    flashManager.write(KWH_PATH, "");
+    flashManager.write(RESET_PATH, "");
+    flashManager.write(PERIOD_PATH, "");
+    flashManager.write(LAST_DAY_PATH, "");
+    flashManager.write(MODE_PATH, "");
+    flashManager.write(RULES_PATH, "");
+    flashManager.write(REGISTERED_PATH, "0");
+    return true;
+  }
+  return false;
 }
 
 AzIoTClient iotClient;

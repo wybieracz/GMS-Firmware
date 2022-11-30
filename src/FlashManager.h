@@ -17,6 +17,7 @@
 #define LAST_DAY_PATH "/day.txt"
 #define MODE_PATH "/mode.txt"
 #define RULES_PATH "/rules.txt"
+#define REGISTERED_PATH "/registered.txt"
 
 class FlashManager {
   public:

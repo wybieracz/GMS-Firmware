@@ -2,17 +2,15 @@
 
 bool telemetryEnabled = true;
 
-bool enableTelemetry(int value) {
-
-  value -= 48;
+bool enableTelemetry(char value) {
     
-  if(value == 1) {
+  if(value == 49) {
     telemetryEnabled = true;
     digitalWrite(LED_GREEN, HIGH);
     return true;
   }
   
-  if(value == 0) {
+  if(value == 48) {
     telemetryEnabled = false;
     digitalWrite(LED_GREEN, LOW);
     return true;
