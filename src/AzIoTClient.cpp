@@ -266,6 +266,8 @@ void AzIoTClient::getStatusPayload(az_span payload, az_span* out_payload) {
   (void)az_span_dtoa(payload, energyManager.kWh, 8, &payload);
   payload = az_span_copy(payload, AZ_SPAN_FROM_STR(", \"relayState\": "));
   (void)az_span_i32toa(payload, (int)relayManager.state, &payload);
+  payload = az_span_copy(payload, AZ_SPAN_FROM_STR(", \"mode\": "));
+  (void)az_span_i32toa(payload, relayManager.mode, &payload);
   payload = az_span_copy(payload, AZ_SPAN_FROM_STR(", \"rules\": \""));
   payload = az_span_copy(payload, az_span_create_from_str(relayManager.rules));
   payload = az_span_copy(payload, AZ_SPAN_FROM_STR("\", \"brightness\": "));

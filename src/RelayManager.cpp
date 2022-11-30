@@ -67,6 +67,8 @@ bool RelayManager::setMode(char* data) {
     flashManager.write(MODE_PATH, "2");
     return true;
   } else {
+    strcpy(rules, data + 1);
+    flashManager.write(RULES_PATH, rules);
     mode = 1;
     flashManager.write(MODE_PATH, "1");
     toggle(data[1]);
