@@ -129,11 +129,11 @@ static esp_err_t mqttEventHandler(esp_mqtt_event_handle_t event) {
         iotClient.sendResponse(az_span_create_from_str(ptr), status, (char*)az_span_ptr(devStatus), az_span_size(devStatus));
       }
       else if(String(methodName).equals("setRegistered")) {
-        changeRegisterState(incomingData) ? status = 200 : status = 400;
+        iotClient.changeRegisterState(incomingData[0]) ? status = 200 : status = 400;
         if(incomingData[0] == 48) {
           iotClient.sendResponse(az_span_create_from_str(ptr), status, "0", 1);
           ESP.restart();
-        } else if(incomingData[0] = 49) {
+        } else if(incomingData[0] == 49) {
           iotClient.sendResponse(az_span_create_from_str(ptr), status, "1", 1);
         }
       }
@@ -361,13 +361,13 @@ void AzIoTClient::check() {
 }
 
 bool AzIoTClient::changeRegisterState(int state) {
-  if(value == 49) {
+  if(state == 49) {
     registered = true;
     flashManager.write(REGISTERED_PATH, "1");
     return true;
   }
   
-  if(value == 48) {
+  if(state == 48) {
     registered = false;
     flashManager.write(SSID_PATH, "");
     flashManager.write(PASS_PATH, "");

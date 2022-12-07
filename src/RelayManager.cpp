@@ -21,6 +21,7 @@ void RelayManager::init() {
   }
   
   rulesMem = flashManager.read(RULES_PATH);
+  if(rulesMem == "") rulesMem = "1";
   strcpy(rules, rulesMem.c_str());
   if(mode == 2) limDate = atoi(rules + 1);
 }

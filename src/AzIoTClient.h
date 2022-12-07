@@ -50,10 +50,10 @@ class AzIoTClient {
     void initIoTHubClient();
     int initMqttClient();
     void sendTelemetry();
-    bool changeRegisterState(int state);
 
   public:
     uint8_t payloadBuffer[256];
+    bool changeRegisterState(int state);
     void sendResponse(az_span rid, uint16_t status, char * payload, int size);
     void getStatusPayload(az_span payload, az_span* out_payload);
     void init();
