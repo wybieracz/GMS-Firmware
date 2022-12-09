@@ -11,17 +11,20 @@ void RelayManager::init() {
   }
 
   modeMem = flashManager.read(MODE_PATH);
-  if(modeMem == "2") {
+  if(modeMem == "1") {
+    mode = 1;
+  } else if(modeMem == "2") {
     mode = 2;
   } else if(modeMem == "3") {
     mode = 3;
   } else {
     mode = 1;
     flashManager.write(MODE_PATH, "1");
+    flashManager.write(RELAY_PATH, "0");
   }
   
   rulesMem = flashManager.read(RULES_PATH);
-  if(rulesMem == "") rulesMem = "1";
+  if(rulesMem == "") rulesMem = "0";
   strcpy(rules, rulesMem.c_str());
   if(mode == 2) limDate = atoi(rules + 1);
 }

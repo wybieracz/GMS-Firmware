@@ -107,7 +107,9 @@ static esp_err_t mqttEventHandler(esp_mqtt_event_handle_t event) {
       else if(String(methodName).equals("setMode")) {
         incomingData[event->data_len - 1] = '\0';
         relayManager.setMode(incomingData + 1) ? status = 200 : status = 400;
-        iotClient.sendResponse(az_span_create_from_str(ptr), status, NULL, 0);
+        az_span devStatus = AZ_SPAN_FROM_BUFFER(iotClient.payloadBuffer);
+        iotClient.getStatusPayload(devStatus, &devStatus);
+        iotClient.sendResponse(az_span_create_from_str(ptr), status, (char*)az_span_ptr(devStatus), az_span_size(devStatus));
       }
       else if(String(methodName).equals("getStatus")) {
         if(energyManager.avgV == 0.0) iotClient.sendResponse(az_span_create_from_str(ptr), 425, NULL, 0);
@@ -272,7 +274,7 @@ void AzIoTClient::getStatusPayload(az_span payload, az_span* out_payload) {
 
   char* date = timeManager.getDataString(false, true);
   az_span original_payload = payload;
-
+  
   payload = az_span_copy(payload, AZ_SPAN_FROM_STR("{ \"deviceId\": \""));
   payload = az_span_copy(payload, AZ_SPAN_FROM_STR(DEVICE_ID));
   payload = az_span_copy(payload, AZ_SPAN_FROM_STR("\", \"voltage\": "));
