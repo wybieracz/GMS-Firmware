@@ -83,10 +83,6 @@ bool RelayManager::setMode(char* data) {
 
 void RelayManager::checkRulesTimeMode() {
   time_t now = time(NULL);
-  Serial.println("rules");
-  Serial.println(rules + 1);
-  Serial.println(now);
-  Serial.println(limDate);
   if(now > limDate) {
     if(rules[0] == 48 && state) {
       state = false;
@@ -117,7 +113,7 @@ void RelayManager::checkRulesAutoMode() {
   char* ptr = rules;
   bool newRelayState = false;
   int day, hStart, mStart, hEnd, mEnd;
-  timeManager.refresh(false);
+  timeManager.refresh(true);
 
   while(*ptr) {
     buffer[0] = '0';
