@@ -8,15 +8,15 @@
 #define LED_GREEN 32
 #define LED_YELLOW 33
 #define RELAY 27
-#define D7 19
-#define D6 18
-#define D5 17
-#define D4 16
+#define D7 16
+#define D6 17
+#define D5 18
+#define D4 19
 #define E 23
 #define RS 22
 #define LED_LCD 21
-#define V_IN 35
-#define I_IN 34
+#define V_IN 34
+#define I_IN 35
 
 void initPinout();
 
