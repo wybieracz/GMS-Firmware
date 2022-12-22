@@ -52,10 +52,10 @@ void LcdManager::print(char* text, int x, int y) {
 }
 
 void LcdManager::printFloat(float value, int precision, int x, int y) {
-  if(value < 300.0) {
+  //if(value < 300.0) {
     lcd.setCursor(x, y);
     lcd.print(value, precision);
-  }
+  //}
 }
 
 void LcdManager::clear() {

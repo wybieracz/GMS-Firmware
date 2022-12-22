@@ -41,7 +41,7 @@ static uint8_t sasSignatureBuffer[256];
 
 class AzIoTClient {
   private:
-    unsigned long nextTelemetryTime = TELEMETRY_FREQUENCY_MILLISECS;
+    unsigned long nextTelemetryTime = START_TELEMETRY_FREQUENCY_MILLISECS;
     char topicBuffer[128];
     String registeredMem;
     bool registered;

@@ -6,22 +6,15 @@
 #include "EnergyManager.h"
 
 EnergyManager::EnergyManager() {
-  offsetV = ADC_COUNTS >> 1;
-  offsetI = ADC_COUNTS >> 1;
-  vRatio = V_CO * (SYSTEM_VOLTAGE / ADC_COUNTS);
-  iRatio = I_CO *(SYSTEM_VOLTAGE / ADC_COUNTS);
+  offsetV = ADC_RESOLUTION >> 1;  // 2048
+  offsetI = ADC_RESOLUTION >> 1;  // 2048
+  vRatio = V_CO;
+  iRatio = ((SYSTEM_VOLTAGE / ADC_RESOLUTION) / (0.1 * 2 / 3)) * I_CO;
   kWh = 0;
   lastmillis = millis();
   first = true;
+  nextLcdTime = 0;
 }
-
-// String kWhMem;
-//     String resetMem;
-//     short int reset;
-//     String periodMem;
-//     short int periodStart;
-//     String lastDayMem;
-//     short int lastDay;
 
 void EnergyManager::init() {
   kWhMem = flashManager.read(KWH_PATH);
@@ -66,8 +59,8 @@ void EnergyManager::calc(unsigned int crossings, unsigned int timeout) {
 
   while(1) {
     startV = analogRead(V_IN);                    //using the voltage waveform
-    if ((startV < (ADC_COUNTS*0.55)) && (startV > (ADC_COUNTS*0.45))) break;  //check its within range
-    if ((millis()-start)>timeout) break;
+    if ((startV < (ADC_RESOLUTION * 0.55)) && (startV > (ADC_RESOLUTION * 0.45))) break;  //check its within range
+    if ((millis() - start) > timeout) break;
   }
 
   //-------------------------------------------------------------------------------------------------------------------------
@@ -75,7 +68,7 @@ void EnergyManager::calc(unsigned int crossings, unsigned int timeout) {
   //-------------------------------------------------------------------------------------------------------------------------
   start = millis();
 
-  while ((crossCount < crossings) && ((millis()-start)<timeout)) {
+  while ((crossCount < crossings) && ((millis() - start) < timeout)) {
     numberOfSamples++;                       //Count number of times looped.
     lastFilteredV = filteredV;               //Used for delay/phase compensation
 
@@ -89,15 +82,13 @@ void EnergyManager::calc(unsigned int crossings, unsigned int timeout) {
     // B) Apply digital low pass filters to extract the 2.5 V or 1.65 V dc offset,
     //     then subtract this - signal is now centred on 0 counts.
     //-----------------------------------------------------------------------------
-    offsetV = offsetV + ((sampleV-offsetV)/1024);
     filteredV = sampleV - offsetV;
-    offsetI = offsetI + ((sampleI-offsetI)/1024);
     filteredI = sampleI - offsetI;
 
     //-----------------------------------------------------------------------------
     // C) Root-mean-square method voltage
     //-----------------------------------------------------------------------------
-    sqV= filteredV * filteredV;                 //1) square voltage values
+    sqV = filteredV * filteredV;                //1) square voltage values
     sumV += sqV;                                //2) sum
 
     //-----------------------------------------------------------------------------
@@ -115,7 +106,7 @@ void EnergyManager::calc(unsigned int crossings, unsigned int timeout) {
     // F) Instantaneous power calc
     //-----------------------------------------------------------------------------
     instP = phaseShiftedV * filteredI;          //Instantaneous Power
-    sumP +=instP;                               //Sum
+    sumP += instP;                               //Sum
 
     //-----------------------------------------------------------------------------
     // G) Find the number of times the voltage has crossed the initial voltage
@@ -135,10 +126,12 @@ void EnergyManager::calc(unsigned int crossings, unsigned int timeout) {
   // 3) Post loop calculations
   //-------------------------------------------------------------------------------------------------------------------------
   //Calculation of the root of the mean of the voltage and current squared (rms) with calibration coefficients.
-  Vrms = vRatio * sqrt(sumV / numberOfSamples);
+  Vrms = vRatio * (sqrt(sumV / numberOfSamples) - VOLTAGE_SHIFT_ADC);
 
   if(relayManager.state) {
-    Irms = iRatio * sqrt(sumI / numberOfSamples);
+    Irms = iRatio * (sqrt(sumI / numberOfSamples) - CURRENT_SHIFT_ADC);
+    if(Irms < 0) Irms = 0;
+
     //Calculation power values
     realPower = vRatio * iRatio * sumP / numberOfSamples;
     apparentPower = Vrms * Irms;
@@ -150,7 +143,6 @@ void EnergyManager::calc(unsigned int crossings, unsigned int timeout) {
     powerFactor = 0.0;
   }
   
-
   //Reset accumulators
   sumV = 0;
   sumI = 0;
@@ -159,7 +151,7 @@ void EnergyManager::calc(unsigned int crossings, unsigned int timeout) {
     dbV = dbV + Vrms;
     dbI = dbI + Irms;
     dbP = dbP + apparentPower;
-    kWh = kWh + apparentPower*(millis()-lastmillis)/3600000000.0;
+    kWh = kWh + apparentPower * (millis() - lastmillis) / 3600000000.0;
     sampleCount++;
   }
   lastmillis = millis();
@@ -182,7 +174,7 @@ void EnergyManager::print() {
   Serial.print("\tkWh: ");
   Serial.print(kWh, 5);
   Serial.println("kWh");
-  lastmillis = millis();
+
 }
 
 void EnergyManager::displayTime(int row) {
@@ -211,15 +203,15 @@ void EnergyManager::displayVI(int row) {
 }
 
 void EnergyManager::displayP(int row) {
-  if(Vrms < 10.0) {
+  if(apparentPower < 10.0) {
     lcdManager.print("P:000", 0, row);
-    lcdManager.printFloat((float)Vrms, 2, 5, row);
-  } else if(Vrms < 100.0) {
+    lcdManager.printFloat((float)apparentPower, 2, 5, row);
+  } else if(apparentPower < 100.0) {
     lcdManager.print("P:00", 0, row);
-    lcdManager.printFloat((float)Vrms, 2, 4, row);
-  } else if(Vrms < 1000.0) {
+    lcdManager.printFloat((float)apparentPower, 2, 4, row);
+  } else if(apparentPower < 1000.0) {
     lcdManager.print("P:", 0, row);
-    lcdManager.printFloat((float)Vrms, 2, 3, row);
+    lcdManager.printFloat((float)apparentPower, 2, 3, row);
   } else {
     lcdManager.print("P:", 0, row);
     lcdManager.printFloat((float)apparentPower, 2, 2, row);
@@ -232,17 +224,21 @@ void EnergyManager::displaykWh(int row) {
 }
 
 void EnergyManager::display() {
-  char* settings = lcdManager.getSettings();
-  lcdManager.clear();
-  for(int i = 0; i < 2; i++) {
-    switch(settings[i]) {
-      case '1': displayTime(i); break;
-      case '2': displayVI(i); break;
-      case '3': displayP(i); break;
-      case '4': displaykWh(i); break;
-      default: displayTime(i); break;
+  if(millis() > nextLcdTime) {
+    char* settings = lcdManager.getSettings();
+    lcdManager.clear();
+    for(int i = 0; i < 2; i++) {
+      switch(settings[i]) {
+        case '1': displayTime(i); break;
+        case '2': displayVI(i); break;
+        case '3': displayP(i); break;
+        case '4': displaykWh(i); break;
+        default: displayTime(i); break;
+      }
     }
+    nextLcdTime = nextLcdTime + LCD_FREQUENCY_MILLISECS;
   }
+  
 }
 
 void EnergyManager::calcAvg() {

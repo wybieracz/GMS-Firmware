@@ -13,12 +13,14 @@
 #include "TimeManager.h"
 #include "RelayManager.h"
 
-#define ADC_BITS    10
-#define ADC_COUNTS  (1<<ADC_BITS)
-#define V_CO 132.2
-#define I_CO 3.72
+#define ADC_RESOLUTION 4096
+#define V_CO 0.6067708333333
+#define I_CO 1.08
+#define VOLTAGE_SHIFT_ADC 946
+#define CURRENT_SHIFT_ADC 95
 #define PHASE_SHIFT 1.7
 #define SYSTEM_VOLTAGE 3.3
+#define LCD_FREQUENCY_MILLISECS 2000
 
 
 class EnergyManager {
@@ -40,6 +42,7 @@ class EnergyManager {
     double sqV, sumV, sqI, sumI, instP, sumP; // sq = squared, sum = Sum, inst = instantaneous
     int startV; // Instantaneous voltage at start of sample window.
     bool lastVCross, checkVCross; // Used to measure number of times threshold is crossed.
+    unsigned long nextLcdTime;
 
     String kWhMem; // Uset to store values in flash
     String resetMem;
