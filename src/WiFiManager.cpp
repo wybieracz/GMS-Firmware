@@ -87,6 +87,7 @@ void WiFiManager::setAP() {
   delay(100);
   IPAddress IP = WiFi.softAPIP();
   logger.info("AP IP address: " + String(IP));
+  Serial.println(IP);
 
   // Web Server Root URL
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){

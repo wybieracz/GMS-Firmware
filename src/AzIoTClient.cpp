@@ -134,6 +134,13 @@ static esp_err_t mqttEventHandler(esp_mqtt_event_handle_t event) {
         iotClient.changeRegisterState(incomingData[0]) ? status = 200 : status = 400;
         if(incomingData[0] == 48) {
           iotClient.sendResponse(az_span_create_from_str(ptr), status, "0", 1);
+          lcdManager.clear();
+          lcdManager.print("Resetting", 0, 0);
+          for(int i = 9; i < 12; i++) {
+            lcdManager.print(".", i, 0);
+            delay(500);
+          }
+          delay(500);
           ESP.restart();
         } else if(incomingData[0] == 49) {
           iotClient.sendResponse(az_span_create_from_str(ptr), status, "1", 1);
@@ -175,7 +182,7 @@ void AzIoTClient::sendResponse(az_span rid, uint16_t status, char * payload, int
     logger.error("Failed to response direct method!");
   }
   else {
-    logger.info("Responsed to direct method.");
+    logger.info("Responded to direct method.");
   }
 }
 
