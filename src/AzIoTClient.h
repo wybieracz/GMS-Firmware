@@ -8,7 +8,6 @@
 #include <string>
 
 #include "AzIoTConfigOffline.h"
-#include "AzIoTMethodHandlers.h"
 #include "AzIoTSasToken.h"
 #include "SerialLogger.h"
 #include "PinManager.h"

@@ -1,13 +1,13 @@
 @font-face {
   font-family: "IBM Plex Sans VF", "Helvetica Neue", Arial, sans-serif;
-  src: url(IBMPlexSans-Regular.ttf) format("truetype");
+  src: url(./IBMPlexSans-Regular.ttf) format("truetype");
   font-weight: 400;
   font-style: normal;
 }
 
 @font-face {
   font-family: "IBM Plex Sans VF", "Helvetica Neue", Arial, sans-serif;
-  src: url(IBMPlexSans-SemiBold.ttf) format("truetype");
+  src: url(./IBMPlexSans-SemiBold.ttf) format("truetype");
   font-weight: 600;
   font-style: normal;
 }
@@ -102,6 +102,20 @@ form {
 .card { 
   margin: 13rem 35.75% 0rem 35.75%;
   background-color: #f4f4f4;
+}
+
+@media (max-width: 66rem) {
+  .card { 
+    margin: 10rem 5rem 1rem 5rem;
+    background-color: #f4f4f4;
+  }
+}
+
+@media (max-width: 42rem) {
+  .card { 
+    margin: 8rem 1rem 1rem 1rem;
+    background-color: #f4f4f4;
+  }
 }
 
 .card-content {
