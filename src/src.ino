@@ -22,7 +22,7 @@ void setup() {
 
 void loop() {
   if (!wifiManager.isAPActive()) {
-  if (WiFi.status() != WL_CONNECTED) {
+    if (WiFi.status() != WL_CONNECTED) {
       digitalWrite(LED_RED, LOW);
       if(!wifiManager.init()) wifiManager.setAP();
     }

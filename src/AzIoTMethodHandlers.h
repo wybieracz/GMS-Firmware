@@ -1,15 +1,12 @@
 #ifndef AZIOTMETHODHANDLERS_H
 #define AZIOTMETHODHANDLERS_H
 
-#include <Arduino.h>
-#include "PinManager.h"
-#include "RelayManager.h"
+// #include <Arduino.h>
+// #include "PinManager.h"
+// #include "RelayManager.h"
 
-extern bool telemetryEnabled;
+// extern bool telemetryEnabled;
 
-bool enableTelemetry(char value);
-bool toggleRelay(int value);
-// bool setColor(char* ptr);
-// bool getStatus(char* ptr);
+// bool enableTelemetry(char value);
 
 #endif //AZIOTMETHODHANDLERS_H

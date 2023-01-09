@@ -84,11 +84,7 @@ static esp_err_t mqttEventHandler(esp_mqtt_event_handle_t event) {
       incomingData[i] = '\0';
       logger.info("Data: " + String(incomingData));
 
-      if(String(methodName).equals("enableTelemetry")) {
-        enableTelemetry(incomingData[0]) ? status = 200 : status = 400;
-        iotClient.sendResponse(az_span_create_from_str(ptr), status, NULL, 0);
-      }
-      else if(String(methodName).equals("setDisplay")) {
+      if(String(methodName).equals("setDisplay")) {
         lcdManager.setDisplay(incomingData) ? status = 200 : status = 400;
         iotClient.sendResponse(az_span_create_from_str(ptr), status, NULL, 0);
       }
