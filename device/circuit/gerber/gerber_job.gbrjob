@@ -1,0 +1,24 @@
+{
+    "Header": {
+        "Comment": "All values are metric (mm)",
+        "CreationDate": "2022-12-05T21:27:54Z",
+        "GenerationSoftware": {
+            "Application": "Fusion 360 Electronics",
+            "Vendor": "Autodesk",
+            "Version": "9.7.0"
+        },
+        "Part": "Single"
+    },
+    "Overall": {
+        "BoardThickness": 0.27,
+        "LayerNumber": 2,
+        "Name": {
+            "ProjectId": "gms_pcb v19"
+        },
+        "Owner": "Michał Pawłowski <michpaw199@student.polsl.pl>",
+        "Size": {
+            "X": 92.055,
+            "Y": 112.954
+        }
+    }
+}

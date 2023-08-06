@@ -7,7 +7,7 @@
 #include <az_iot.h>
 #include <string>
 
-#include "AzIoTConfigOffline.h"
+#include "AzIoTConfig.h"
 #include "AzIoTSasToken.h"
 #include "SerialLogger.h"
 #include "PinManager.h"
