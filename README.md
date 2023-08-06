@@ -81,8 +81,9 @@ Device overview.
 ![device_wifi](/device/photos/wifi.jpg)
 After device startup it will show Wi-Fi credentials. When connected, it is possible to configure device netowrk settings and connect it to the home Wi-Fi.
 ![device_connect](/device/photos/connect.jpg)
+After network configuration, device will reboot and connect to the home Wi-Fi.
 ![device_display_1](/device/photos/display_1.jpg)
 ![device_display_2](/device/photos/display_2.jpg)
-It is possible to configure data presented on device display. 16x2 LCD allows to display two of data: Time and date, voltage and current, power, power comsumption.
+It is possible to configure data presented on device display. 16x2 LCD allows to display two of data: Time and date, voltage and current, power, power comsumption. In addition it is powwible to change display brightness.
 ## Video presentation
 [YouTube](https://youtu.be/LqCKxmR3ckY)
