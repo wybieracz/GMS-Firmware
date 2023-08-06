@@ -18,7 +18,7 @@ The project involves the design and development of a device that allows remote c
 * ESPAsyncWebServer
 * EmonLib
 * Azure IoT device SDK for C
-## Circuit diagram idea
+## Circuit idea diagram
 ![idea](/diagram/Idea.png)
 ## Circuit diagram
 ![circuit](/device/circuit/gms.png)
@@ -74,15 +74,15 @@ FROM
 14. Your device is now online and can be linked with your account.
 15. For device manipulation check [GMS - App](https://github.com/wybieracz/SZEE-App).
 ## Device
-![device_front](/main/device/photos/front.jpg)
-![device_top](/main/device/photos/top.jpg)
-![device_inside](/main/device/photos/inside.jpg)
+![device_front](/device/photos/front.jpg)
+![device_top](/device/photos/top.jpg)
+![device_inside](/device/photos/inside.jpg)
 Device overview.
-![device_wifi](/main/device/photos/wifi.jpg)
+![device_wifi](/device/photos/wifi.jpg)
 After device startup it will show Wi-Fi credentials. When connected, it is possible to configure device netowrk settings and connect it to the home Wi-Fi.
-![device_connect](/main/device/photos/connect.jpg)
-![device_display_1](/main/device/photos/display_1.jpg)
-![device_display_2](/main/device/photos/display_2.jpg)
+![device_connect](/device/photos/connect.jpg)
+![device_display_1](/device/photos/display_1.jpg)
+![device_display_2](/device/photos/display_2.jpg)
 It is possible to configure data presented on device display. 16x2 LCD allows to display two of data: Time and date, voltage and current, power, power comsumption.
 ## Video presentation
-* [YouTube](https://youtu.be/LqCKxmR3ckY).
+[YouTube](https://youtu.be/LqCKxmR3ckY)
