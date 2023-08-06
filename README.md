@@ -1,6 +1,6 @@
 # Grid Management System - Device and Firmware
 ## IoT class system of electricity management based on a cloud interface
-The project involves the design and development of a device that allows remote control the power supply of the connected receiver. Powering the receiver on and off should be possible on demand, after a certain period of time, during designated periods. In addition, the device will conduct measurements of voltage and current and count the energy used. The second part of the project is creation of a web application to manage the device and present statistics. Communication with the device and data storage will be possible through a configured cloud service.
+The project involves the design and development of a device that allows remote control the power supply of the connected receiver. Powering the receiver on and off should be possible on demand, after a certain period of time, during designated periods. In addition, the device will conduct measurements of voltage and current and count the energy used (Smart Socket). The second part of the project is creation of a web application to manage the device and present statistics. Communication with the device and data storage will be possible through a configured cloud service.
 ## Device features
 * Wi-Fi connection wizzard
 * 230V/10A power supply control
@@ -38,7 +38,7 @@ The solution consists of six major components:
 * Azure App Service - Web app used for device manipulation and telemetry presentation. [(Backend)](https://github.com/wybieracz/SZEE-App)
 * Azure Storage Accounts - Web app used for device manipulation and telemetry presentation. [(Frontend)](https://github.com/wybieracz/SZEE-App)
 ## Getting started
-1. Create IoT device using circuit diagram / pcb design.
+1. Create IoT device using circuit diagram / PCB design.
 2. Create account on [Microsoft Azure](https://azure.microsoft.com/en-gb/).
 3. Create [Azure IoT Hub](https://docs.microsoft.com/en-gb/azure/iot-hub/iot-hub-create-through-portal).
 4. In Azure IoT Hub add new device via `Devices > Add Device`.
@@ -78,10 +78,13 @@ FROM
 ![device_top](/device/photos/top.jpg)
 ![device_inside](/device/photos/inside.jpg)
 Device overview.
+
 ![device_wifi](/device/photos/wifi.jpg)
 After device startup it will show Wi-Fi credentials. When connected, it is possible to configure device netowrk settings and connect it to the home Wi-Fi.
+
 ![device_connect](/device/photos/connect.jpg)
 After network configuration, device will reboot and connect to the home Wi-Fi.
+
 ![device_display_1](/device/photos/display_1.jpg)
 ![device_display_2](/device/photos/display_2.jpg)
 It is possible to configure data presented on device display. 16x2 LCD allows to display two of data: Time and date, voltage and current, power, power comsumption. In addition it is powwible to change display brightness.
