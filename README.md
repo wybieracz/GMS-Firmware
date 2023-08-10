@@ -1,16 +1,10 @@
 # Grid Management System - Device and Firmware
 ## IoT class system of electricity management based on a cloud interface
 The project involves the design and development of a device that allows remote control the power supply of the connected receiver. Powering the receiver on and off should be possible on demand, after a certain period of time, during designated periods. In addition, the device will conduct measurements of voltage and current and count the energy used (Smart Socket). The second part of the project is creation of a web application to manage the device and present statistics. Communication with the device and data storage will be possible through a configured cloud service.
-## Device features
-* Wi-Fi connection wizzard
-* 230V/10A power supply control
-* Manual mode, time mode, auto mode
-* Programmable display (Voltage and current, date, power, power consumption)
-* Power compsumption counter with auto-resetter
-* Sending telemetry to cloud
 ## Technologies
 * C++
 * Azure IoT Hub
+* Azure Stream Analytics
 * ESP-32
 ## Libraries
 * SPIFFS
@@ -18,6 +12,13 @@ The project involves the design and development of a device that allows remote c
 * ESPAsyncWebServer
 * EmonLib
 * Azure IoT device SDK for C
+## Device features
+* Wi-Fi connection wizzard
+* 230V/10A power supply control
+* Manual mode, time mode, auto mode
+* Programmable display (Voltage and current, date, power, power consumption)
+* Power compsumption counter with auto-resetter
+* Sending telemetry to cloud
 ## Circuit idea diagram
 ![idea](/diagram/Idea.png)
 ## Circuit diagram
